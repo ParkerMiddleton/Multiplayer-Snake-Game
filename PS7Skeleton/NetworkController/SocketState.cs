@@ -20,6 +20,7 @@ public class SocketState
     internal byte[] buffer = new byte[BufferSize];      // Receive buffer
     internal StringBuilder data = new StringBuilder();  // Unprocessed data
 
+    
     /// <summary>
     /// A message indicating the nature of an error, if one occurred
     /// </summary>
@@ -57,6 +58,7 @@ public class SocketState
     /// don't have to change the network code
     /// </summary>
     public Action<SocketState> OnNetworkAction;
+     
 
     /// <summary>
     /// Simple constructor

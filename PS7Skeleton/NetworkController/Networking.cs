@@ -5,13 +5,16 @@ using System.Text;
 
 namespace NetworkUtil;
 
-/// Sun: 4 -> 
+/// <summary>
+/// 
+/// </summary>
 
 public static class Networking
 {
     /////////////////////////////////////////////////////////////////////////////////////////
     // Server-Side Code
     /////////////////////////////////////////////////////////////////////////////////////////
+    private static TcpListener listener;
 
     /// <summary>
     /// Starts a TcpListener on the specified port and starts an event-loop to accept new clients.
@@ -20,9 +23,17 @@ public static class Networking
     /// </summary>
     /// <param name="toCall">The method to call when a new connection is made</param>
     /// <param name="port">The the port to listen on</param>
+    /// <return> Active TCPListener for the desired server </return>
     public static TcpListener StartServer(Action<SocketState> toCall, int port)
-    {
-        throw new NotImplementedException();
+    {                                     
+        // 1) creating the listener and starting 
+        listener = new TcpListener(IPAddress.Any, port); 
+        listener.Start();
+        
+        // 2) begining the event loop for acception new clients to the server. 
+        listener.BeginAcceptSocket(AcceptNewClient, toCall);
+        
+        return listener;
     }
 
     /// <summary>
@@ -45,14 +56,32 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        try
+        {
+            listener.EndAcceptSocket(ar); 
+
+        }catch (Exception ex) {
+       
+            SocketState errorSocket = (SocketState)ar.AsyncState!;
+            errorSocket.ErrorOccurred = true;
+            errorSocket.ErrorMessage = ex.Message;
+            return;   
+        }
+
+        SocketState socketState = (SocketState)ar.AsyncState!;
+        socketState.OnNetworkAction(socketState);
+        listener.BeginAcceptSocket(AcceptNewClient, socketState);
+
     }
+
 
     /// <summary>
     /// Stops the given TcpListener.
     /// </summary>
     public static void StopServer(TcpListener listener)
     {
+
+        listener.Stop();
         throw new NotImplementedException();
     }
 
@@ -144,7 +173,6 @@ public static class Networking
     {
         throw new NotImplementedException();
     }
-
 
     /////////////////////////////////////////////////////////////////////////////////////////
     // Server and Client Common Code
