@@ -5,11 +5,16 @@ using System.Text;
 
 namespace NetworkUtil;
 
+/// <summary>
+/// 
+/// </summary>
+
 public static class Networking
 {
     /////////////////////////////////////////////////////////////////////////////////////////
     // Server-Side Code
     /////////////////////////////////////////////////////////////////////////////////////////
+    private static TcpListener listener;
 
     /// <summary>
     /// Starts a TcpListener on the specified port and starts an event-loop to accept new clients.
@@ -77,6 +82,7 @@ public static class Networking
     {
 
         listener.Stop();
+        throw new NotImplementedException();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
