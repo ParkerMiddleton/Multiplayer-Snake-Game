@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Loader;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetworkUtil;
 
@@ -24,12 +25,11 @@ public static class Networking
     {
         TcpListener listener = new(IPAddress.Any, port);
 
-
         // 1) creating the listener and starting 
         // 2) begining the event loop for acception new clients to the server. 
         try
         {
-            ServerTuple serverTuple = new ServerTuple(toCall, listener);
+            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener);
             listener.Start();
             listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
         }
@@ -61,27 +61,28 @@ public static class Networking
     private static void AcceptNewClient(IAsyncResult ar)
     {
         // pull the tuple through 
-        ServerTuple networkTuple = (ServerTuple)ar.AsyncState!;
+        Tuple<Action<SocketState>, TcpListener> serverTuple = (Tuple<Action<SocketState>, TcpListener>)ar.AsyncState!;
         try
         {
             // attempt to end the AcceptSocket command
-            Socket socket = networkTuple.Listener.EndAcceptSocket(ar);
+            Socket socket = serverTuple.Item2.EndAcceptSocket(ar);
             // create a socket state object that will have its network action changed to the ToCall delegate 
-            SocketState socketState = new SocketState(networkTuple.Action, socket);
-            socketState.OnNetworkAction = networkTuple.Action;
+            SocketState socketState = new SocketState(serverTuple.Item1, socket);
+            socketState.OnNetworkAction = serverTuple.Item1;
             // invoke that action
             socketState.OnNetworkAction(socketState);
 
             //continue the loop
-            networkTuple.Listener.BeginAcceptSocket(AcceptNewClient, networkTuple);
+            serverTuple.Item2.BeginAcceptSocket(AcceptNewClient, serverTuple);
 
         }
         catch (Exception ex)
         {
             // create an error socket with the delegate and an error message
-            SocketState errorSocket = new SocketState(networkTuple.Action, ex.Message);
+            SocketState errorSocket = new SocketState(serverTuple.Item1, ex.Message);
             // no need to set errorSocket's error status to true, this happens already in the constructor
             errorSocket.OnNetworkAction(errorSocket);
+
             // event loop doesnt continue
             return;
         }
@@ -202,6 +203,7 @@ public static class Networking
         try
         {// ending the connection
             socketState.TheSocket.EndConnect(ar);
+            socketState.OnNetworkAction(socketState);
 
         }
         catch (Exception ex)
@@ -232,8 +234,16 @@ public static class Networking
     /// <param name="state">The SocketState to begin receiving</param>
     public static void GetData(SocketState state)
     {
-        // try / catch ? 
-        state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+        try
+        {
+            state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+        }
+        catch (Exception ex)
+        {
+            state.ErrorOccurred = true;
+            state.ErrorMessage = ex.Message;
+            state.OnNetworkAction(state);
+        }
     }
 
     /// <summary>
@@ -256,20 +266,40 @@ public static class Networking
     private static void ReceiveCallback(IAsyncResult ar)
     {
         SocketState state = (SocketState)ar.AsyncState!;
-        // try catch 
-        state.TheSocket.EndReceive(ar);
+        try
+        {
+            state.TheSocket.EndReceive(ar);
+        }
+        catch (Exception ex)
+        {
+            state.ErrorOccurred = true;
+            state.ErrorMessage = ex.Message;
+            state.OnNetworkAction(state);
+        }
 
-        string data = Encoding.UTF8.GetString(state.buffer);
-        state.data.Append(data); // potential error here. 
-        state.OnNetworkAction(state);
-        state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+        // if data is recieved successfully.
+        try
+        {
+            //Read the characters as UTF8 and put them in the SocketState's unprocessed data buffer (the string builder) 
+            string data = Encoding.UTF8.GetString(state.buffer);
+            state.data.Append(data);
+            state.OnNetworkAction(state);
+            // this method is not a loop. This should be decided by the client if they want to loop the recieving of data. 
+        }
+        catch (Exception ex)
+        {
+            state.ErrorOccurred = true;
+            state.ErrorMessage = ex.Message;
+            state.OnNetworkAction(state);
+
+        }
 
     }
 
     /// <summary>
     /// Begin the asynchronous process of sending data via BeginSend, using SendCallback to finalize the send process.
     /// 
-    /// If the socket is closed, does not attempt to send.
+    /// If the socket is closed, it does not attempt to send.
     /// 
     /// If a send fails for any reason, this method ensures that the Socket is closed before returning.
     /// </summary>
@@ -290,9 +320,8 @@ public static class Networking
             socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendCallback, socket);
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // This could throw an exception of the socket itself is not connected.
             socket.Close();
             return false;
         }
@@ -316,7 +345,6 @@ public static class Networking
 
     }
 
-
     /// <summary>
     /// Begin the asynchronous process of sending data via BeginSend, using SendAndCloseCallback to finalize the send process.
     /// This variant closes the socket in the callback once complete. This is useful for HTTP servers.
@@ -338,12 +366,11 @@ public static class Networking
         try
         {
             byte[] message = Encoding.UTF8.GetBytes(data);
-            socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendCallback, socket);
+            socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendAndCloseCallback, socket);
             return true;
         }
         catch (Exception ex)
         {
-            // This could throw an exception of the socket itself is not connected.
             socket.Close();
             return false;
         }
@@ -367,33 +394,18 @@ public static class Networking
         Socket socket = (Socket)ar.AsyncState!;
         socket.EndSend(ar);
         socket.Close();
-
     }
 
-    internal class ClientTuple
-    {
-        public Action<SocketState> Action { get; private set; }
-        public IPAddress IP { get; private set; }
-        public int Port { get; private set; }
-        public Socket Socket { get; private set; }
-        public ClientTuple(IPAddress ip, int port, Socket socket, Action<SocketState> action)
-        {
-            IP = ip; Port = port;
-            Socket = socket;
-            Action = action;
-        }
-    }
+    //internal class ServerTuple
+    //{
+    //    public Action<SocketState> Action { get; private set; }
 
-    internal class ServerTuple
-    {
-        public Action<SocketState> Action { get; private set; }
+    //    public TcpListener Listener { get; private set; }
 
-        public TcpListener Listener { get; private set; }
-
-        public ServerTuple(Action<SocketState> action, TcpListener listener)
-        {
-            Action = action;
-            Listener = listener;
-        }
-    }
+    //    public ServerTuple(Action<SocketState> action, TcpListener listener)
+    //    {
+    //        Action = action;
+    //        Listener = listener;
+    //    }
+    //}
 }
