@@ -5,16 +5,11 @@ using System.Text;
 
 namespace NetworkUtil;
 
-/// <summary>
-/// 
-/// </summary>
-
 public static class Networking
 {
     /////////////////////////////////////////////////////////////////////////////////////////
     // Server-Side Code
-    /////////////////////////////////////////////////////////////////////////////////////////
-    private static TcpListener listener;
+    ////////////////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
     /// Starts a TcpListener on the specified port and starts an event-loop to accept new clients.
@@ -25,14 +20,22 @@ public static class Networking
     /// <param name="port">The the port to listen on</param>
     /// <return> Active TCPListener for the desired server </return>
     public static TcpListener StartServer(Action<SocketState> toCall, int port)
-    {                                     
+    {
+        TcpListener listener = new(IPAddress.Any, port);
+
+
         // 1) creating the listener and starting 
-        listener = new TcpListener(IPAddress.Any, port); 
-        listener.Start();
-        
         // 2) begining the event loop for acception new clients to the server. 
-        listener.BeginAcceptSocket(AcceptNewClient, toCall);
-        
+        try
+        {
+            NetworkTuple networkTuple = new NetworkTuple(toCall, listener);
+            listener.Start();
+            listener.BeginAcceptSocket(AcceptNewClient, networkTuple);
+        }
+        catch (Exception ex)
+        {
+            //TODO: some stuff will happen if a server takes too long to connect to a client. 
+        }
         return listener;
     }
 
@@ -56,33 +59,39 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
+
+        NetworkTuple networkTuple = (NetworkTuple)ar.AsyncState!;
         try
         {
-            listener.EndAcceptSocket(ar); 
+            Socket socket = networkTuple.Listener.EndAcceptSocket(ar);
+            SocketState socketState = new SocketState(networkTuple.Action, socket);
+            socketState.OnNetworkAction = networkTuple.Action;
+            socketState.OnNetworkAction(socketState);
+            //continue the loop
+            networkTuple.Listener.BeginAcceptSocket(AcceptNewClient, networkTuple);
 
-        }catch (Exception ex) {
-       
+        }
+        catch (Exception ex)
+        {
+
             SocketState errorSocket = (SocketState)ar.AsyncState!;
             errorSocket.ErrorOccurred = true;
             errorSocket.ErrorMessage = ex.Message;
-            return;   
+            errorSocket.OnNetworkAction(errorSocket);
+            // event loop doesnt continue
+            return;
         }
 
-        SocketState socketState = (SocketState)ar.AsyncState!;
-        socketState.OnNetworkAction(socketState);
-        listener.BeginAcceptSocket(AcceptNewClient, socketState);
+
 
     }
-
 
     /// <summary>
     /// Stops the given TcpListener.
     /// </summary>
     public static void StopServer(TcpListener listener)
     {
-
         listener.Stop();
-        throw new NotImplementedException();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -141,19 +150,24 @@ public static class Networking
             }
             catch (Exception)
             {
+
                 // TODO: Indicate an error to the user, as specified in the documentation
             }
         }
 
         // Create a TCP/IP socket.
-        Socket socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
         // This disables Nagle's algorithm (google if curious!)
         // Nagle's algorithm can cause problems for a latency-sensitive 
         // game like ours will be 
         socket.NoDelay = true;
+        SocketState socketState = new SocketState(toCall, socket);
 
-        // TODO: Finish the remainder of the connection process as specified.
+        // Probably a try catch here
+        socket.BeginConnect(ipAddress, port, ConnectedCallback, socketState);
+
+
     }
 
     /// <summary>
@@ -171,7 +185,22 @@ public static class Networking
     /// <param name="ar">The object asynchronously passed via BeginConnect</param>
     private static void ConnectedCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        // getting stuff from previous BeginConnect method call
+        IPAddress currentIP = (IPAddress)ar.AsyncState!;
+        int port = (int)ar.AsyncState!;
+
+        Socket socket = (Socket)ar.AsyncState!;
+
+        SocketState state = (SocketState)ar.AsyncState!;
+        // ending the connection
+        socket.EndConnect(ar); // try catch ?
+
+        SocketState currentSocketState = (SocketState)ar.AsyncState!; // this contains the ToCall from the previous 
+        //methods socket state object. 
+
+        SocketState socketState = new SocketState(currentSocketState.OnNetworkAction, currentSocketState.TheSocket);
+
+        socketState.TheSocket.BeginConnect(currentIP, port, ConnectedCallback, socketState);// wouldnt need a try catch? 
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +220,8 @@ public static class Networking
     /// <param name="state">The SocketState to begin receiving</param>
     public static void GetData(SocketState state)
     {
-        throw new NotImplementedException();
+        // try / catch ? 
+        state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
     }
 
     /// <summary>
@@ -213,7 +243,15 @@ public static class Networking
     /// </param>
     private static void ReceiveCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        SocketState state = (SocketState)ar.AsyncState!;
+        // try catch 
+        state.TheSocket.EndReceive(ar);
+
+        string data = Encoding.UTF8.GetString(state.buffer);
+        state.data.Append(data); // potential error here. 
+        state.OnNetworkAction(state);
+        state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+
     }
 
     /// <summary>
@@ -228,7 +266,24 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool Send(Socket socket, string data)
     {
-        throw new NotImplementedException();
+
+        if (!socket.Connected)
+        {
+            socket.Close();
+            return false;
+        }
+        try
+        {
+            byte[] message = Encoding.UTF8.GetBytes(data);
+            socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendCallback, socket);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // This could throw an exception of the socket itself is not connected.
+            socket.Close();
+            return false;
+        }
     }
 
     /// <summary>
@@ -244,7 +299,9 @@ public static class Networking
     /// </param>
     private static void SendCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        Socket socket = (Socket)ar.AsyncState!;
+        socket.EndSend(ar);
+
     }
 
 
@@ -261,7 +318,23 @@ public static class Networking
     /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
     public static bool SendAndClose(Socket socket, string data)
     {
-        throw new NotImplementedException();
+        if (!socket.Connected)
+        {
+            socket.Close();
+            return false;
+        }
+        try
+        {
+            byte[] message = Encoding.UTF8.GetBytes(data);
+            socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendCallback, socket);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // This could throw an exception of the socket itself is not connected.
+            socket.Close();
+            return false;
+        }
     }
 
     /// <summary>
@@ -279,6 +352,23 @@ public static class Networking
     /// </param>
     private static void SendAndCloseCallback(IAsyncResult ar)
     {
-        throw new NotImplementedException();
+        Socket socket = (Socket)ar.AsyncState!;
+        socket.EndSend(ar);
+        socket.Close();
+
+    }
+
+
+    internal class NetworkTuple
+    {
+        public Action<SocketState> Action { get; private set; }
+
+        public TcpListener Listener { get; private set; }
+
+        public NetworkTuple(Action<SocketState> action, TcpListener listener)
+        {
+            Action = action;
+            Listener = listener;
+        }
     }
 }

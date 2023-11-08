@@ -470,13 +470,3 @@ public class NetworkTests
     //TODO: Add more of your own tests here
 
 }
-
-
-
-/// server -> run 1-100
-/// 
-/// 
-/// 
-/// print(12)
-/// AllCaps(String) -> STRING // takes 20 minutes // async
-/// print(13)
