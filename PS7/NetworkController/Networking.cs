@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Loader;
 using System.Text;
+using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetworkUtil;
@@ -25,17 +26,25 @@ public static class Networking
     {
         TcpListener listener = new(IPAddress.Any, port);
 
+
         // 1) creating the listener and starting 
         // 2) begining the event loop for acception new clients to the server. 
         try
         {
             Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener);
             listener.Start();
-            listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
+            IAsyncResult result = listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
+            bool success = result.AsyncWaitHandle.WaitOne(3000, true);
+            if (!success)
+            {
+
+                throw new Exception("Connection Attempt Timed out");
+            }
+
         }
         catch (Exception ex)
         {
-            //TODO: some stuff will happen if a server takes too long to connect to a client. 
+
         }
         return listener;
     }
@@ -60,14 +69,16 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
+
         // pull the tuple through 
         Tuple<Action<SocketState>, TcpListener> serverTuple = (Tuple<Action<SocketState>, TcpListener>)ar.AsyncState!;
         try
         {
+
             // attempt to end the AcceptSocket command
             Socket socket = serverTuple.Item2.EndAcceptSocket(ar);
             // create a socket state object that will have its network action changed to the ToCall delegate 
-            SocketState socketState = new SocketState(serverTuple.Item1, socket);
+            SocketState socketState = new(serverTuple.Item1, socket);
             socketState.OnNetworkAction = serverTuple.Item1;
             // invoke that action
             socketState.OnNetworkAction(socketState);
@@ -75,17 +86,20 @@ public static class Networking
             //continue the loop
             serverTuple.Item2.BeginAcceptSocket(AcceptNewClient, serverTuple);
 
+
+
         }
         catch (Exception ex)
         {
             // create an error socket with the delegate and an error message
-            SocketState errorSocket = new SocketState(serverTuple.Item1, ex.Message);
+            SocketState errorSocket = new(serverTuple.Item1, ex.Message);
             // no need to set errorSocket's error status to true, this happens already in the constructor
             errorSocket.OnNetworkAction(errorSocket);
 
             // event loop doesnt continue
             return;
         }
+
     }
 
     /// <summary>
@@ -236,7 +250,8 @@ public static class Networking
     {
         try
         {
-            state.TheSocket.BeginReceive(state.buffer, state.data.Length, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+            state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+
         }
         catch (Exception ex)
         {
@@ -268,21 +283,10 @@ public static class Networking
         SocketState state = (SocketState)ar.AsyncState!;
         try
         {
-            state.TheSocket.EndReceive(ar);
-        }
-        catch (Exception ex)
-        {
-            state.ErrorOccurred = true;
-            state.ErrorMessage = ex.Message;
-            state.OnNetworkAction(state);
-        }
-
-        // if data is recieved successfully.
-        try
-        {
+            int bytes = state.TheSocket.EndReceive(ar);
             //Read the characters as UTF8 and put them in the SocketState's unprocessed data buffer (the string builder) 
-            string data = Encoding.UTF8.GetString(state.buffer);
-            state.data.Append(data);
+            string encoding = Encoding.UTF8.GetString(state.buffer, 0, bytes);
+            state.data.Append(encoding);
             state.OnNetworkAction(state);
             // this method is not a loop. This should be decided by the client if they want to loop the recieving of data. 
         }
@@ -291,8 +295,9 @@ public static class Networking
             state.ErrorOccurred = true;
             state.ErrorMessage = ex.Message;
             state.OnNetworkAction(state);
-
         }
+
+
 
     }
 
