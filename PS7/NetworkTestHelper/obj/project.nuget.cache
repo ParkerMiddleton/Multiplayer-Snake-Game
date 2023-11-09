@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "pjkUuad+iASdC/W/C+lZjKtKO0SRBfTurDFjgwYqb0aUj7mu9uyELm4EZjtzTebqWW5x8bPk30/Bs3hVo83W0g==",
+  "dgSpecHash": "YORGL9Ne8WfeF3Oy/ibwVBONkCWFo/HAA3n9nWbCfxsqBrCqNldp/rgxQ2LD0oJhqnTT/m8bjOd57SO9NPZxMQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\parke\\Source\\Repos\\Examples\\PS7Skeleton\\NetworkTestHelper\\NetworkTestHelper.csproj",
+  "projectFilePath": "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\PS7\\NetworkTestHelper\\NetworkTestHelper.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

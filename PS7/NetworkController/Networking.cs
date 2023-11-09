@@ -25,19 +25,18 @@ public static class Networking
     public static TcpListener StartServer(Action<SocketState> toCall, int port)
     {
         TcpListener listener = new(IPAddress.Any, port);
-
         // 1) creating the listener and starting 
         // 2) begining the event loop for acception new clients to the server. 
         try
         {
-            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener); // basically a class 
+            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener); 
 
             listener.Start();
             listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
         }
-        catch (Exception ex)
+        catch (Exception )
         {
-
+            
         }
         return listener;
     }
@@ -359,7 +358,7 @@ public static class Networking
             socket.BeginSend(message, 0, message.Length, SocketFlags.None, SendAndCloseCallback, socket);
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             socket.Close();
             return false;

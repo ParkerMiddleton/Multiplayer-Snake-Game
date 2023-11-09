@@ -18,7 +18,7 @@ public class SocketState
     public readonly Socket TheSocket;                   // The socket
     public const int BufferSize = 4096;                 // Size of receive buffer
     internal byte[] buffer = new byte[BufferSize];      // Receive buffer
-    internal StringBuilder data = new StringBuilder();  // Unprocessed data
+    internal StringBuilder data = new();  // Unprocessed data
 
     /// <summary>
     /// A message indicating the nature of an error, if one occurred
@@ -46,7 +46,7 @@ public class SocketState
     /// </summary>
     public readonly long ID;
     private static long nextID = 0;
-    private static object mutexForID = new object();
+    private static object mutexForID = new();
 
     /// <summary>
     /// Function to call when data is received or when a connection is made.

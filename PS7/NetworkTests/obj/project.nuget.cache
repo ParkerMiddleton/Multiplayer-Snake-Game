@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "OFk3XHkASTXj9+O+RyL6gbMY2nt2D1SOLuXF31ogDs+8RotxJBnQMPJa/amwmiKSpGEtPeRhYBqP5F8IoMJ4wA==",
+  "dgSpecHash": "QkirsOXAeS6SW3OMXfqA8daGWHs53M3hI6rcxck2uSKeCwylmDmVSD8MdUp0dPl98zrxQjEEBUo+5yEXSwcgMA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\parke\\Source\\Repos\\Examples\\PS7Skeleton\\NetworkTests\\NetworkTests.csproj",
+  "projectFilePath": "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\PS7\\NetworkTests\\NetworkTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\parke\\.nuget\\packages\\microsoft.codecoverage\\17.5.0\\microsoft.codecoverage.17.5.0.nupkg.sha512",
     "C:\\Users\\parke\\.nuget\\packages\\microsoft.net.test.sdk\\17.5.0\\microsoft.net.test.sdk.17.5.0.nupkg.sha512",
