@@ -464,40 +464,57 @@ public class NetworkTests
 
         Assert.AreEqual(message.ToString(), testLocalSocketState.GetData());
     }
-    //---new tests---
+
     [TestMethod]
     public void ListenerClosedTest()
     {
         TcpListener listener = new TcpListener(IPAddress.Any, 2112);
         listener.Start();
         Networking.StopServer(listener);
-        Assert.IsFalse(listener.Server.Connected); 
-    }
-    [TestMethod]
-    public void ListenerClosedTest2()
-    {
-        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
-        listener.Start();
-        Networking.SendAndClose(testLocalSocketState!.TheSocket, "data");
         Assert.IsFalse(listener.Server.Connected);
-        
+
     }
-    [TestMethod]
-    public void ListenerClosedTest3()
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void ListenerAndSocketClosedTest(bool clientSide)
     {
-        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
-        listener.Start();
-        Networking.Send(testLocalSocketState!.TheSocket, "data");
-        Assert.IsTrue(listener.Server.Connected);
-        testLocalSocketState!.TheSocket.Close();
-        Assert.IsFalse(listener.Server.Connected);
+        SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+        testLocalSocketState.OnNetworkAction = (x) =>
+        {
+            if (x.ErrorOccurred)
+                return;
+            Networking.GetData(x);
+        };
+
+        Networking.GetData(testLocalSocketState);
+        Networking.SendAndClose(testRemoteSocketState.TheSocket, "data");
+        Assert.IsFalse(testListener.Server.Connected);
+        Assert.IsFalse(testRemoteSocketState.TheSocket.Connected);
+
     }
-    [TestMethod]
-    public void Send()
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void ListenerSocketClosedTest2(bool clientSide)
     {
-        Assert.IsTrue(Networking.Send(testLocalSocketState!.TheSocket, "data"));
-        testLocalSocketState!.TheSocket.Close();
-        Assert.IsFalse(Networking.Send(testLocalSocketState!.TheSocket, "data"));
+        SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+        testLocalSocketState.OnNetworkAction = (x) =>
+        {
+            if (x.ErrorOccurred)
+                return;
+            Networking.GetData(x);
+        };
+        Assert.IsTrue(testRemoteSocketState.TheSocket.Connected);
+
+
+        Networking.GetData(testLocalSocketState);
+        Networking.Send(testRemoteSocketState.TheSocket, "data");
+        Assert.IsFalse(testListener.Server.Connected);
+        Assert.IsTrue(testRemoteSocketState.TheSocket.Connected);
+
     }
 
 }
