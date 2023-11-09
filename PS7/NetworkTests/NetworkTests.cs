@@ -1,6 +1,7 @@
 // Author: Daniel Kopta, May 2019, Travis Martin 2023
 // Unit testing examples for CS 3500 networking library (part of final project)
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -463,10 +464,44 @@ public class NetworkTests
 
         Assert.AreEqual(message.ToString(), testLocalSocketState.GetData());
     }
-
-    /*** End Send/Receive Tests ***/
-
-
-    //TODO: Add more of your own tests here
+    //---new tests---
+    [TestMethod]
+    public void ListenerClosedTest()
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
+        listener.Start();
+        Networking.StopServer(listener);
+        Assert.IsFalse(listener.Server.Connected); 
+    }
+    [TestMethod]
+    public void ListenerClosedTest2()
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
+        listener.Start();
+        Networking.SendAndClose(testLocalSocketState!.TheSocket, "data");
+        Assert.IsFalse(listener.Server.Connected);
+        
+    }
+    [TestMethod]
+    public void ListenerClosedTest3()
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
+        listener.Start();
+        Networking.Send(testLocalSocketState!.TheSocket, "data");
+        Assert.IsTrue(listener.Server.Connected);
+        testLocalSocketState!.TheSocket.Close();
+        Assert.IsFalse(listener.Server.Connected);
+    }
+    [TestMethod]
+    public void Send()
+    {
+        Assert.IsTrue(Networking.Send(testLocalSocketState!.TheSocket, "data"));
+        testLocalSocketState!.TheSocket.Close();
+        Assert.IsFalse(Networking.Send(testLocalSocketState!.TheSocket, "data"));
+    }
 
 }
+
+
+
+
