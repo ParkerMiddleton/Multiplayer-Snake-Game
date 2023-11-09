@@ -8,6 +8,16 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NetworkUtil;
 
+/// <summary>
+/// <Author>Parker Middleton</Author>
+/// <Author>Abbey Lasater</Author>
+/// <Date>November 9th 2023</Date>
+/// 
+/// This is a simple networking API that represents connections between a local entity and a remote entity 
+/// This library is not a server, or a client, but rather the connection between the two. This is designed to help the user 
+/// of this class successfully pass data between one another. 
+/// 
+/// </summary>
 public static class Networking
 {
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -27,17 +37,11 @@ public static class Networking
         TcpListener listener = new(IPAddress.Any, port);
         // 1) creating the listener and starting 
         // 2) begining the event loop for acception new clients to the server. 
-        try
-        {
-            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener); 
 
-            listener.Start();
-            listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
-        }
-        catch (Exception )
-        {
-            
-        }
+        Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener);
+        listener.Start();
+        listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
+
         return listener;
     }
 
@@ -68,7 +72,7 @@ public static class Networking
             Socket socket = serverTuple.Item2.EndAcceptSocket(ar);
             // create a socket state object that will have its network action changed to the ToCall delegate 
             SocketState socketState = new(serverTuple.Item1, socket);
-            socketState.OnNetworkAction = serverTuple.Item1;  
+            socketState.OnNetworkAction = serverTuple.Item1;
 
             // invoke that action
             socketState.OnNetworkAction(socketState);
@@ -79,10 +83,9 @@ public static class Networking
         catch (Exception ex)
         {
             // create an error socket with the delegate and an error message
-            SocketState errorSocket = new(serverTuple.Item1, ex.Message); 
+            SocketState errorSocket = new(serverTuple.Item1, ex.Message);
             // no need to set errorSocket's error status to true, this happens already in the constructor
             errorSocket.OnNetworkAction(errorSocket);
-
             // event loop doesnt continue
             return;
         }
@@ -160,17 +163,13 @@ public static class Networking
 
         // Create a TCP/IP socket.
         Socket socket = new(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-        // This disables Nagle's algorithm (google if curious!)
-        // Nagle's algorithm can cause problems for a latency-sensitive 
-        // game like ours will be 
         socket.NoDelay = true;
 
         try
         {
             SocketState asyncSocket = new(toCall, socket);
-            IAsyncResult result =  socket.BeginConnect(ipAddress, port, ConnectedCallback, asyncSocket);
-            bool success  = result.AsyncWaitHandle.WaitOne(3000, true);
+            IAsyncResult result = socket.BeginConnect(ipAddress, port, ConnectedCallback, asyncSocket);
+            bool success = result.AsyncWaitHandle.WaitOne(3000, true);
             if (!success)
             {
                 throw new Exception();
@@ -271,8 +270,7 @@ public static class Networking
             //Read the characters as UTF8 and put them in the SocketState's unprocessed data buffer (the string builder) 
             string encoding = Encoding.UTF8.GetString(state.buffer, 0, bytes);
             state.data.Append(encoding);
-            state.OnNetworkAction(state);
-            // this method is not a loop. This should be decided by the client if they want to loop the recieving of data. 
+            state.OnNetworkAction(state); 
         }
         catch (Exception ex)
         {
@@ -280,9 +278,6 @@ public static class Networking
             state.ErrorMessage = ex.Message;
             state.OnNetworkAction(state);
         }
-
-
-
     }
 
     /// <summary>

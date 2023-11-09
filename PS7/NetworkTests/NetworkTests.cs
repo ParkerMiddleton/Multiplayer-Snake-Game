@@ -516,8 +516,7 @@ public class NetworkTests
         Assert.IsTrue(testRemoteSocketState.TheSocket.Connected);
 
     }
-    // give our best effort 
-    //TODO: Add more of your own tests here
+  
 
 }
 

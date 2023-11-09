@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\PS7",
+    "\\PS7\\NetworkController",
+    "\\PS7\\NetworkTestHelper",
+    "\\PS7\\NetworkTests"
   ],
-  "SelectedNode": "\\PS7.sln",
+  "SelectedNode": "\\PS7\\NetworkController\\Networking.cs",
   "PreviewInSolutionExplorer": false
 }
