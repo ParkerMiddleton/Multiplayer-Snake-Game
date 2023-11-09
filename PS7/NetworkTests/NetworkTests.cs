@@ -1,6 +1,7 @@
 // Author: Daniel Kopta, May 2019, Travis Martin 2023
 // Unit testing examples for CS 3500 networking library (part of final project)
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -461,12 +462,65 @@ public class NetworkTests
 
         NetworkTestHelper.WaitForOrTimeout(() => testLocalSocketState.GetData().Length == message.Length, NetworkTestHelper.timeout);
 
-        Assert.AreEqual(message.ToString().Length, testLocalSocketState.GetData().Length);
+        Assert.AreEqual(message.ToString(), testLocalSocketState.GetData());
     }
 
-    /*** End Send/Receive Tests ***/
+    [TestMethod]
+    public void ListenerClosedTest()
+    {
+        TcpListener listener = new TcpListener(IPAddress.Any, 2112);
+        listener.Start();
+        Networking.StopServer(listener);
+        Assert.IsFalse(listener.Server.Connected);
 
+    }
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void ListenerAndSocketClosedTest(bool clientSide)
+    {
+        SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+        testLocalSocketState.OnNetworkAction = (x) =>
+        {
+            if (x.ErrorOccurred)
+                return;
+            Networking.GetData(x);
+        };
+
+        Networking.GetData(testLocalSocketState);
+        Networking.SendAndClose(testRemoteSocketState.TheSocket, "data");
+        Assert.IsFalse(testListener.Server.Connected);
+        Assert.IsFalse(testRemoteSocketState.TheSocket.Connected);
+
+    }
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataTestMethod]
+    public void ListenerSocketClosedTest2(bool clientSide)
+    {
+        SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+        testLocalSocketState.OnNetworkAction = (x) =>
+        {
+            if (x.ErrorOccurred)
+                return;
+            Networking.GetData(x);
+        };
+        Assert.IsTrue(testRemoteSocketState.TheSocket.Connected);
+
+
+        Networking.GetData(testLocalSocketState);
+        Networking.Send(testRemoteSocketState.TheSocket, "data");
+        Assert.IsFalse(testListener.Server.Connected);
+        Assert.IsTrue(testRemoteSocketState.TheSocket.Connected);
+
+    }
     // give our best effort 
     //TODO: Add more of your own tests here
 
 }
+
+
+
+
