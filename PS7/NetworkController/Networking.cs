@@ -26,21 +26,14 @@ public static class Networking
     {
         TcpListener listener = new(IPAddress.Any, port);
 
-
         // 1) creating the listener and starting 
         // 2) begining the event loop for acception new clients to the server. 
         try
         {
-            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener);
+            Tuple<Action<SocketState>, TcpListener> serverTuple = Tuple.Create(toCall, listener); // basically a class 
+
             listener.Start();
-            IAsyncResult result = listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
-            bool success = result.AsyncWaitHandle.WaitOne(3000, true);
-            if (!success)
-            {
-
-                throw new Exception("Connection Attempt Timed out");
-            }
-
+            listener.BeginAcceptSocket(AcceptNewClient, serverTuple);
         }
         catch (Exception ex)
         {
@@ -69,30 +62,25 @@ public static class Networking
     /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
     private static void AcceptNewClient(IAsyncResult ar)
     {
-
-        // pull the tuple through 
         Tuple<Action<SocketState>, TcpListener> serverTuple = (Tuple<Action<SocketState>, TcpListener>)ar.AsyncState!;
         try
         {
-
             // attempt to end the AcceptSocket command
             Socket socket = serverTuple.Item2.EndAcceptSocket(ar);
             // create a socket state object that will have its network action changed to the ToCall delegate 
             SocketState socketState = new(serverTuple.Item1, socket);
-            socketState.OnNetworkAction = serverTuple.Item1;
+            socketState.OnNetworkAction = serverTuple.Item1;  
+
             // invoke that action
             socketState.OnNetworkAction(socketState);
 
             //continue the loop
             serverTuple.Item2.BeginAcceptSocket(AcceptNewClient, serverTuple);
-
-
-
         }
         catch (Exception ex)
         {
             // create an error socket with the delegate and an error message
-            SocketState errorSocket = new(serverTuple.Item1, ex.Message);
+            SocketState errorSocket = new(serverTuple.Item1, ex.Message); 
             // no need to set errorSocket's error status to true, this happens already in the constructor
             errorSocket.OnNetworkAction(errorSocket);
 
@@ -132,9 +120,6 @@ public static class Networking
     /// <param name="port">The port on which the server is listening</param>
     public static void ConnectToServer(Action<SocketState> toCall, string hostName, int port)
     {
-        // TODO: This method is incomplete, but contains a starting point 
-        //       for decoding a host address
-
         // Establish the remote endpoint for the socket.
         IPHostEntry ipHostInfo;
         IPAddress ipAddress = IPAddress.None;
@@ -185,7 +170,13 @@ public static class Networking
         try
         {
             SocketState asyncSocket = new(toCall, socket);
-            socket.BeginConnect(ipAddress, port, ConnectedCallback, asyncSocket);
+            IAsyncResult result =  socket.BeginConnect(ipAddress, port, ConnectedCallback, asyncSocket);
+            bool success  = result.AsyncWaitHandle.WaitOne(3000, true);
+            if (!success)
+            {
+                throw new Exception();
+            }
+
         }
         catch (Exception ex)
         {
@@ -213,12 +204,10 @@ public static class Networking
     {
         // getting stuff from previous BeginConnect method call
         SocketState socketState = (SocketState)ar.AsyncState!;
-
         try
-        {// ending the connection
+        {   // ending the connection
             socketState.TheSocket.EndConnect(ar);
             socketState.OnNetworkAction(socketState);
-
         }
         catch (Exception ex)
         {
@@ -226,9 +215,6 @@ public static class Networking
             errorSocket.OnNetworkAction(errorSocket);
             return;
         }
-
-
-
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +237,6 @@ public static class Networking
         try
         {
             state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
-
         }
         catch (Exception ex)
         {
@@ -401,16 +386,4 @@ public static class Networking
         socket.Close();
     }
 
-    //internal class ServerTuple
-    //{
-    //    public Action<SocketState> Action { get; private set; }
-
-    //    public TcpListener Listener { get; private set; }
-
-    //    public ServerTuple(Action<SocketState> action, TcpListener listener)
-    //    {
-    //        Action = action;
-    //        Listener = listener;
-    //    }
-    //}
 }
