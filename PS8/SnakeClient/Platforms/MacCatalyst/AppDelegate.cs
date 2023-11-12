@@ -1,6 +1,6 @@
 ﻿using Foundation;
 
-namespace SnakeClient;
+namespace SnakeGame;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

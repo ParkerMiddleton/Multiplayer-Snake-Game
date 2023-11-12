@@ -1,7 +1,7 @@
 ﻿using ObjCRuntime;
 using UIKit;
 
-namespace SnakeClient;
+namespace SnakeGame;
 
 public class Program
 {

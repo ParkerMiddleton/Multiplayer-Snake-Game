@@ -44,14 +44,14 @@ public class WorldPanel : IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("wallsprite.png");
-        background = loadImage("background.png");
+        wall = loadImage( "wallsprite.png" );
+        background = loadImage( "background.png" );
         initializedForDrawing = true;
     }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
-        if (!initializedForDrawing)
+        if ( !initializedForDrawing )
             InitializeDrawing();
 
         // undo previous transformations from last frame

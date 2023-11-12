@@ -1,10 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net7.0-android;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(TargetFrameworks);net7.0-maccatalyst</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
-		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks> -->
 		<OutputType>Exe</OutputType>
 		<RootNamespace>SnakeClient</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -16,7 +14,7 @@
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.snakeclient</ApplicationId>
-		<ApplicationIdGuid>bd775c99-9954-4c1d-8038-2e42d0477882</ApplicationIdGuid>
+		<ApplicationIdGuid>f52bb242-d868-4921-adcd-b00d740cf8be</ApplicationIdGuid>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -31,6 +29,9 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios|AnyCPU'">
+	  <CreatePackage>false</CreatePackage>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
 	  <CreatePackage>false</CreatePackage>
 	</PropertyGroup>
 	<ItemGroup>
@@ -55,4 +56,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Images\background.png" />
+	  <EmbeddedResource Include="Resources\Images\wallsprite.png" />
+	</ItemGroup>
 </Project>
