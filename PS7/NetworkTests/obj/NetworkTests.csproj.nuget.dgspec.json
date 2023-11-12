@@ -71,7 +71,7 @@
         "projectName": "NetworkTestHelper",
         "projectPath": "C:\\Users\\parke\\Source\\Repos\\game-bytebuddies_game\\PS7\\NetworkTestHelper\\NetworkTestHelper.csproj",
         "packagesPath": "C:\\Users\\parke\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\PS7\\NetworkTestHelper\\obj\\",
+        "outputPath": "C:\\Users\\parke\\Source\\Repos\\game-bytebuddies_game\\PS7\\NetworkTestHelper\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
