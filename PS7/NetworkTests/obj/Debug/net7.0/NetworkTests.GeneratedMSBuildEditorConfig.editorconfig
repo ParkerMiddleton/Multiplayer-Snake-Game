@@ -8,4 +8,4 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = NetworkTests
-build_property.ProjectDir = C:\Users\parke\Source\Repos\game-bytebuddies_game\PS7\NetworkTests\
+build_property.ProjectDir = C:\Users\parke\source\repos\game-bytebuddies_game\PS7\NetworkTests\
