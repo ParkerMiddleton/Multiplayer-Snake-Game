@@ -6,31 +6,31 @@ namespace SnakeGame
     public class Snake
     {
         [JsonInclude]
-        private int snake;
+        public int snake { get; set; }
 
         [JsonInclude]
-        private string name;
+        public  string name { get; set; }
 
         [JsonInclude]
-        private List<Vector2D> body;
+        public List<Vector2D> body { get; set; }
 
         [JsonInclude]
-        private Vector2D dir;
+        public Vector2D dir { get; set; }
 
         [JsonInclude]
-        private int score;
+        public int score { get; set; }
 
         [JsonInclude]
-        private bool died;
+        public bool died { get; set; }
 
         [JsonInclude]
-        private bool alive;
+        public bool alive { get; set; }
 
         [JsonInclude]
-        private bool dc;
+        public bool dc { get; set; }
 
         [JsonInclude]
-        private bool join;
+        public bool join { get; set; }
 
         [JsonConstructor]
         public Snake(int _snake, string _name, List<Vector2D> _body, Vector2D _dir, int _score, bool _died, bool _alive, bool _dc, bool _join)

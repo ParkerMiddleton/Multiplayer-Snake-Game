@@ -6,13 +6,13 @@ namespace SnakeGame
     public class Wall
     {
         [JsonInclude]
-        private int wall;
+        public int wall { get; set; }
 
         [JsonInclude]
-        private Vector2D p1;
+        public Vector2D p1 { get; set; }
 
         [JsonInclude]
-        private Vector2D p2;
+        public Vector2D p2 { get; set; }
 
         [JsonConstructor]
         public Wall(int _wall, Vector2D _p1, Vector2D _p2)

@@ -137,7 +137,7 @@ public partial class MainPage : ContentPage
         graphicsView.Invalidate();
         gameController.Connected += ConnectStatus;
         gameController.Error += DisplayErrorMessage;
-        gameController.MessagesArrived += ProcessJson;
+        gameController.
     
     }
 

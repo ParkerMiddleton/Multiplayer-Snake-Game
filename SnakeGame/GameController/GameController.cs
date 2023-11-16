@@ -1,4 +1,5 @@
 ﻿using NetworkUtil;
+using System.Numerics;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -40,7 +41,10 @@ namespace SnakeGame
         public delegate void MessageHandler(IEnumerable<string> messages);
         public event MessageHandler? MessagesArrived;
 
-
+        // A delegate and event to fire when the controller
+        // has received and processed new info from the server
+        public delegate void GameUpdateHandler();
+        public event GameUpdateHandler? UpdateArrived; // some method that updates theWorld object with new stuff from the server. 
 
 
         /// <summary>
@@ -160,10 +164,6 @@ namespace SnakeGame
             if (theServer is not null)
                 Networking.Send(theServer.TheSocket, message + "\n");
         }
-
-
-
-
 
 
 

@@ -8,16 +8,16 @@ namespace SnakeGame
 {
     public class World
     {
-        Dictionary<int, Snake> Player { get; set; }
-        Dictionary<int, Wall> Walls { get; set; }
-        Dictionary<int, Powerup> Powerups { get; set; }
+        public Dictionary<int, Snake> Players { get; set; }
+        public Dictionary<int, Wall> Walls { get; set; }
+        public Dictionary<int, Powerup> Powerups { get; set; }
 
         private int size { get; set; }
 
         public World(int _size)
         {
 
-            Player = new Dictionary<int, Snake>();
+            Players = new Dictionary<int, Snake>();
             Walls = new Dictionary<int, Wall>();
             Powerups = new Dictionary<int, Powerup>();
             this.size = _size;

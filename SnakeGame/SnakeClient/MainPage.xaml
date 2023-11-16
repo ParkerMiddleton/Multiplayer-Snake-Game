@@ -18,7 +18,8 @@
 
         <VerticalStackLayout x:Name="verticalStackLayout"
                              Spacing="10"
-                             VerticalOptions="Center">
+                             VerticalOptions="Center"
+                             BackgroundColor="Gray">
             <HorizontalStackLayout HorizontalOptions="Center">
                 <Label Text="server: " VerticalOptions="Center" />
                 <Entry Text="localhost" x:Name="serverText" />
@@ -39,7 +40,7 @@
                 <Entry MaxLength="1" IsVisible="true"
                        TextChanged="OnTextChanged" x:Name="keyboardHack" />
             </HorizontalStackLayout>
-            <Border Stroke="#FFFFFF"
+            <Border Stroke="Brown"
                     StrokeThickness="10"
                     StrokeShape="Rectangle"
                     HorizontalOptions="Center">
