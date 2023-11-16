@@ -14,6 +14,7 @@ using System.Net;
 using Font = Microsoft.Maui.Graphics.Font;
 using SizeF = Microsoft.Maui.Graphics.SizeF;
 using System.Numerics;
+using Microsoft.Maui.Controls;
 
 namespace SnakeGame;
 
@@ -23,12 +24,21 @@ public class WorldPanel : IDrawable
     private IImage wall;
     private IImage background;
 
+    // A delegate for DrawObjectWithTransform
+    // Methods matching this delegate can draw whatever they want onto the canvas
+    public delegate void ObjectDrawer(object o, ICanvas canvas);
+
+    private GraphicsView graphicsView = new();
+
+    private int viewSize = 500; //  this should be sent by the server
+
+    private World theWorld;
+
+
     // for use of drawing dummy data for the view
     Wall wall23 = new Wall(23, new Vector2D(755, -200), new Vector2D(755, -100));
     Wall wall22 = new Wall(22, new Vector2D(755, -200), new Vector2D(755, -100));
-
     
-
     private bool initializedForDrawing = false;
 
     private IImage loadImage(string name)
@@ -47,6 +57,7 @@ public class WorldPanel : IDrawable
 
     public WorldPanel()
     {
+        
     }
 
     private void InitializeDrawing()
@@ -63,11 +74,11 @@ public class WorldPanel : IDrawable
 
         // undo previous transformations from last frame
         canvas.ResetState();
-
-        // example code for how to draw
-        // (the image is not visible in the starter code)
-        canvas.DrawImage(wall, 0, 0, wall.Width, wall.Height);
-        canvas.DrawImage(background, 100,100, background.Width *2, background.Height*2);
+        
+       // example code for how to draw
+       // (the image is not visible in the starter code)
+       canvas.DrawImage(wall, 0, 0, wall.Width, wall.Height);
+        canvas.DrawImage(background, -250, 250, background.Width , background.Height);
     }
 
 }

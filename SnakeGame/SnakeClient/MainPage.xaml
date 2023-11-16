@@ -39,14 +39,15 @@
                 <Entry MaxLength="1" IsVisible="true"
                        TextChanged="OnTextChanged" x:Name="keyboardHack" />
             </HorizontalStackLayout>
-            <Border Stroke="#000000"
-                    StrokeThickness="4"
+            <Border Stroke="#FFFFFF"
+                    StrokeThickness="10"
                     StrokeShape="Rectangle"
                     HorizontalOptions="Center">
                 <GraphicsView Drawable="{StaticResource drawable1}"
                               x:Name="graphicsView"
                               HeightRequest="900"
-                              WidthRequest="900" />
+                              WidthRequest="900" 
+                              />
             </Border>
         </VerticalStackLayout>
     </ScrollView>

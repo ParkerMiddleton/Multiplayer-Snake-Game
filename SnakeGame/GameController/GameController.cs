@@ -1,5 +1,6 @@
 ﻿using NetworkUtil;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SnakeGame
@@ -31,6 +32,13 @@ namespace SnakeGame
         /// <param name="error"></param>
         public delegate void ErrorHandler(string error);
         public event ErrorHandler? Error;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messages"></param>
+        public delegate void MessageHandler(IEnumerable<string> messages);
+        public event MessageHandler? MessagesArrived;
 
 
 
@@ -69,9 +77,88 @@ namespace SnakeGame
             theServer = state;
 
             // Start an event loop to receive messages from the server
-            // in our case this should be the "handshake" data.
-            //state.OnNetworkAction = ReceiveMessage;
-            //Networking.GetData(state);
+            state.OnNetworkAction = ReceiveMessage;
+            Networking.GetData(state);
+        }
+
+        /// <summary>
+        /// Method to be invoked by the networking library when 
+        /// data is available
+        /// </summary>
+        /// <param name="state"></param>
+        private void ReceiveMessage(SocketState state)
+        {
+            if (state.ErrorOccurred)
+            {
+                // inform the view
+                Error?.Invoke("Lost connection to server");
+                return;
+            }
+            ProcessMessages(state);
+
+            // Continue the event loop
+            // state.OnNetworkAction has not been changed, 
+            // so this same method (ReceiveMessage) 
+            // will be invoked when more data arrives
+            Networking.GetData(state);
+        }
+
+        /// <summary>
+        /// Process any buffered messages separated by '\n'
+        /// Then inform the view
+        /// </summary>
+        /// <param name="state"></param>
+        private void ProcessMessages(SocketState state)
+        {
+            string totalData = state.GetData();
+            string[] parts = Regex.Split(totalData, @"(?<=[\n])");
+
+            // Loop until we have processed all messages.
+            // We may have received more than one.
+
+            List<string> newMessages = new List<string>();
+
+            foreach (string p in parts)
+            {
+                // Ignore empty strings added by the regex splitter
+                if (p.Length == 0)
+                    continue;
+                // The regex splitter will include the last string even if it doesn't end with a '\n',
+                // So we need to ignore it if this happens. 
+                if (p[p.Length - 1] != '\n')
+                    break;
+
+                // build a list of messages to send to the view
+                newMessages.Add(p);
+
+                // Then remove it from the SocketState's growable buffer
+                state.RemoveData(0, p.Length);
+            }
+
+
+            // parse JSON from server, 
+            // send new world state
+            // inform the view
+            MessagesArrived?.Invoke(newMessages);
+
+        }
+
+        /// <summary>
+        /// Closes the connection with the server
+        /// </summary>
+        public void Close()
+        {
+            theServer?.TheSocket.Close();
+        }
+
+        /// <summary>
+        /// Send a message to the server
+        /// </summary>
+        /// <param name="message"></param>
+        public void MessageEntered(string message)
+        {
+            if (theServer is not null)
+                Networking.Send(theServer.TheSocket, message + "\n");
         }
 
 

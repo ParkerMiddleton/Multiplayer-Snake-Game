@@ -135,7 +135,34 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         graphicsView.Invalidate();
+        gameController.Connected += ConnectStatus;
+        gameController.Error += DisplayErrorMessage;
+        gameController.MessagesArrived += ProcessJson;
+    
     }
+
+    private void ProcessJson(IEnumerable<string> messages)
+    { 
+        //JSON 
+        //Walls
+        //Snake state 
+        //the width of the game board
+        // some kind of avenue to draw json objects to the world panel. 
+        // maybe: DeserializeJSONdata
+        throw new NotImplementedException();
+    }
+
+    private void DisplayErrorMessage(string error)
+    {
+        DisplayAlert("error", error, "okay");
+    }
+
+    private void ConnectStatus()
+    {
+        throw new NotImplementedException();
+    }
+
+
 
     void OnTapped(object sender, EventArgs args)
     {
@@ -199,7 +226,7 @@ public partial class MainPage : ContentPage
         //Starts the connection process with the controller.
         gameController.Connect(serverText.Text);
 
-       // DisplayAlert("Delete this", "Code to start the controller's connecting process goes here", "OK");
+        //DisplayAlert("Delete this", "Code to start the controller's connecting process goes here", "OK");
 
         keyboardHack.Focus();
     }
