@@ -40,6 +40,10 @@
                 <Entry MaxLength="1" IsVisible="true"
                        TextChanged="OnTextChanged" x:Name="keyboardHack" />
             </HorizontalStackLayout>
+            <Editor 
+                     x:Name="dataRecievedLabel"
+                     Text="recieved data"
+                     HeightRequest="200" />
             <Border Stroke="Brown"
                     StrokeThickness="10"
                     StrokeShape="Rectangle"

@@ -135,33 +135,26 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         graphicsView.Invalidate();
-        gameController.Connected += ConnectStatus;
         gameController.Error += DisplayErrorMessage;
-        gameController.
-    
+        gameController.MessagesArrived += DisplayInServerBar;
     }
 
-    private void ProcessJson(IEnumerable<string> messages)
-    { 
-        //JSON 
-        //Walls
-        //Snake state 
-        //the width of the game board
-        // some kind of avenue to draw json objects to the world panel. 
-        // maybe: DeserializeJSONdata
-        throw new NotImplementedException();
+    /// <summary>
+    /// For testing purposes. Delete for final submit. This should just spit back the JSON data from the server. 
+    /// </summary>
+    /// <param name="messages"></param>
+    private void DisplayInServerBar(IEnumerable<string> messages)
+    {
+
+        Dispatcher.Dispatch(
+          () => dataRecievedLabel.Text = messages.First());
+
     }
 
     private void DisplayErrorMessage(string error)
     {
-        DisplayAlert("error", error, "okay");
+        Dispatcher.Dispatch(() => DisplayAlert("error", error, "okay"));
     }
-
-    private void ConnectStatus()
-    {
-        throw new NotImplementedException();
-    }
-
 
 
     void OnTapped(object sender, EventArgs args)
@@ -222,12 +215,9 @@ public partial class MainPage : ContentPage
             DisplayAlert("Error", "Name must be less than 16 characters", "OK");
             return;
         }
-        
+
         //Starts the connection process with the controller.
-        gameController.Connect(serverText.Text);
-
-        //DisplayAlert("Delete this", "Code to start the controller's connecting process goes here", "OK");
-
+        gameController.Connect(serverText.Text, nameText.Text);
         keyboardHack.Focus();
     }
 

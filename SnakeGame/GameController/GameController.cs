@@ -14,6 +14,8 @@ namespace SnakeGame
     /// The GameController should also define methods that the View can invoke whenever certain user inputs occur,
     /// then decide which messages to send to the server, requesting that the snake turns. 
     /// </summary>
+    /// 
+
     public class GameController
     {
         [JsonInclude]
@@ -57,9 +59,10 @@ namespace SnakeGame
         /// Starts the process for connecting to the server. 
         /// </summary>
         /// <param name="ServerText"></param>
-        public void Connect(string ServerText)
+        public void Connect(string ServerText, string nameText)
         {
             Networking.ConnectToServer(OnConnect, ServerText, 11000);
+            MessageEntered(nameText);
         }
 
         /// <summary>
@@ -139,11 +142,8 @@ namespace SnakeGame
                 state.RemoveData(0, p.Length);
             }
 
-
-            // parse JSON from server, 
-            // send new world state
             // inform the view
-            MessagesArrived?.Invoke(newMessages);
+           MessagesArrived?.Invoke(newMessages);
 
         }
 
