@@ -123,25 +123,14 @@ and then receive your player ID, world size, and wall locations back.
 It would then be wise to create your world information (players, food, etc) data structures and classes
 so that you can deserialize and store the information continuously sent after the handshake."
  
- 
- 
- 
- 
- 
- 
+
  */
 
 
-
-
-
-
-
-/// <summary>
-/// 
-/// </summary>
 public partial class MainPage : ContentPage
 {
+    GameController gameController = new();
+
     public MainPage()
     {
         InitializeComponent();
@@ -178,6 +167,7 @@ public partial class MainPage : ContentPage
 
     private void NetworkErrorHandler()
     {
+        // dispatcher here? 
         DisplayAlert("Error", "Disconnected from server", "OK");
     }
 
@@ -205,7 +195,11 @@ public partial class MainPage : ContentPage
             DisplayAlert("Error", "Name must be less than 16 characters", "OK");
             return;
         }
-        DisplayAlert("Delete this", "Code to start the controller's connecting process goes here", "OK");
+        
+        //Starts the connection process with the controller.
+        gameController.Connect(serverText.Text);
+
+       // DisplayAlert("Delete this", "Code to start the controller's connecting process goes here", "OK");
 
         keyboardHack.Focus();
     }

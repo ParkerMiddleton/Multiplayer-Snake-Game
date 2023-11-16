@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetworkController\NetworkController.csproj" />
+    <ProjectReference Include="..\Vector2D\Vector2D.csproj" />
   </ItemGroup>
 
 </Project>

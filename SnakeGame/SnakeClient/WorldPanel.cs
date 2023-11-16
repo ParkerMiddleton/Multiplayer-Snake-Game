@@ -13,8 +13,7 @@ using Microsoft.Maui;
 using System.Net;
 using Font = Microsoft.Maui.Graphics.Font;
 using SizeF = Microsoft.Maui.Graphics.SizeF;
-
-
+using System.Numerics;
 
 namespace SnakeGame;
 
@@ -23,6 +22,12 @@ public class WorldPanel : IDrawable
 {
     private IImage wall;
     private IImage background;
+
+    // for use of drawing dummy data for the view
+    Wall wall23 = new Wall(23, new Vector2D(755, -200), new Vector2D(755, -100));
+    Wall wall22 = new Wall(22, new Vector2D(755, -200), new Vector2D(755, -100));
+
+    
 
     private bool initializedForDrawing = false;
 
@@ -62,6 +67,7 @@ public class WorldPanel : IDrawable
         // example code for how to draw
         // (the image is not visible in the starter code)
         canvas.DrawImage(wall, 0, 0, wall.Width, wall.Height);
+        canvas.DrawImage(background, 100,100, background.Width *2, background.Height*2);
     }
 
 }

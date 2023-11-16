@@ -61,4 +61,10 @@
 	  <EmbeddedResource Include="Resources\Images\background.png" />
 	  <EmbeddedResource Include="Resources\Images\wallsprite.png" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\GameController\GameController.csproj" />
+	  <ProjectReference Include="..\Vector2D\Vector2D.csproj" />
+	  <ProjectReference Include="..\World\World.csproj" />
+	</ItemGroup>
 </Project>
