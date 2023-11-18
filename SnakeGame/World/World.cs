@@ -17,6 +17,7 @@ namespace SnakeGame
 
         public World(int _size)
         {
+            
             Players = new Dictionary<int, Snake>();
             Walls = new Dictionary<int, Wall>();
             Powerups = new Dictionary<int, Powerup>();

@@ -15,10 +15,11 @@ using Font = Microsoft.Maui.Graphics.Font;
 using SizeF = Microsoft.Maui.Graphics.SizeF;
 using System.Numerics;
 using Microsoft.Maui.Controls;
-using ABI.System.Numerics;
-using Microsoft.UI.Xaml.Controls;
+//using ABI.System.Numerics;
+//using Microsoft.UI.Xaml.Controls;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Microsoft.Maui.Graphics;
 
 namespace SnakeGame;
 
@@ -140,28 +141,35 @@ public class WorldPanel : IDrawable
         lock (theWorld)
         {
             //Basically if the player hasnt connected to the server yet, dont draw and center on screen. 
-            //This should only matter within the first few frames of starting the server. 
-            if (playerID != -1)
-            {
-                Snake currentPlayer = theWorld.Players[playerID];
-                float playerX = (float)currentPlayer.body.First().GetX();
-                float playerY = (float)currentPlayer.body.First().GetY();
+            //This should only matter within the first few frames of starting the server.
+            //--Causes snake to permanently stay in middle and background to move, not sure how to center it to start in a different way
+            //if (playerID != -1)
+            //{
+            //    Snake currentPlayer = theWorld.Players[playerID];
+            //    float playerX = (float)currentPlayer.body.First().GetX();
+            //    float playerY = (float)currentPlayer.body.First().GetY();
 
-                //Centers current player on screen.
-                canvas.Translate(-playerX + (viewSize / 2), -playerY + (viewSize / 2));
-            }
+            //    //Centers current player on screen.
+            //    canvas.Translate(-playerX + (viewSize / 2), -playerY + (viewSize / 2));
+            //}
 
             //Draw Snakes
             foreach (var p in theWorld.Players.Values)
+            {
                 DrawObjectWithTransform(canvas, p,
-                  p.body[0].GetX(), p.body[0].GetY(), p.dir.ToAngle(),
-                  SnakeSegmentDrawer);
+                    p.body[0].GetX(), p.body[0].GetY(), p.dir.ToAngle(),
+                    SnakeSegmentDrawer);
+
+                
+            }
+
 
             //Draw Walls
             foreach (var p in theWorld.Walls.Values)
                 DrawObjectWithTransform(canvas, p,
                   p.p1.GetX(), p.p2.GetY(), 0,
                   WallDrawer);
+                
 
             //Draw Powerups
             foreach (var p in theWorld.Powerups.Values)
@@ -171,6 +179,7 @@ public class WorldPanel : IDrawable
 
         }
     }
+    
 
     /// <summary>
     /// A method that can be used as an ObjectDrawer delegate
@@ -180,15 +189,18 @@ public class WorldPanel : IDrawable
     private void WallDrawer(object o, ICanvas canvas)
     {
         Wall p = o as Wall;
-        // scale the ships down a bit
+        
         float w = 50;
         float h = 50;
 
         // Images are drawn starting from the top-left corner.
         // So if we want the image centered on the player's location, we have to offset it
         // by half its size to the left (-width/2) and up (-height/2)
-        canvas.DrawImage(wall, -w / 2, -h / 2, w, h);
+       canvas.DrawImage(wall, -w / 2, -h / 2, w, h);
+       
     }
+
+   
 
     /// <summary>
     ///
@@ -217,12 +229,34 @@ public class WorldPanel : IDrawable
     /// <param name="canvas"></param>
     private void SnakeSegmentDrawer(object o, ICanvas canvas)
     {
+      
+        Color[] colors = { Colors.Red, Colors.Blue, Colors.Green, Colors.Indigo, Colors.HotPink, Colors.Lavender, Colors.LightGreen, Colors.Orange };
+        
         Snake snake = o as Snake;
         int snakeSegmentLength = 20;
-        canvas.StrokeSize = 10;
-        canvas.FillColor = Colors.HotPink;
-        canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
+        
+        int snakeSize = snakeSegmentLength + (snake.score * 20);
 
+
+        canvas.StrokeSize = 10;
+        canvas.StrokeColor = colors[snake.snake];
+        canvas.DrawLine(0, 0, 0, -snakeSize);
+
+        //displaying name and score
+        string nameScore = $"{snake.name} - {snake.score}";
+        canvas.FontColor = colors[snake.snake];
+        canvas.FontSize = 18;
+        canvas.Font = Font.Default;
+        canvas.DrawString(nameScore, 0, 0, 380, 100, HorizontalAlignment.Left, VerticalAlignment.Top);
+
+        //explosion
+        if(snake.died == true)
+        {
+            canvas.StrokeSize = 10;
+            canvas.FillColor = Colors.Red;
+            canvas.DrawEllipse(0, 0, 80, 80);
+            
+        }
     }
     /// <summary>
     /// This method performs a translation and rotation to draw an object.

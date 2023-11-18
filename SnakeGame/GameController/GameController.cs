@@ -202,6 +202,7 @@ namespace SnakeGame
 
                     if (data.Contains("snake"))
                     {
+                        
                         Snake? snake = JsonSerializer.Deserialize<Snake>(data);
                         if (!theWorld.Players.ContainsKey(snake!.snake))
                         {
@@ -214,11 +215,13 @@ namespace SnakeGame
                     }
                     else if (data.Contains("wall"))
                     {
+                        
                         Wall? wall = JsonSerializer.Deserialize<Wall>(data);
                         theWorld!.Walls.Add(wall!.wall, wall);
                     }
                     else if (data.Contains("power"))
                     {
+                       
                         Powerup? powerup = JsonSerializer.Deserialize<Powerup>(data);
                         if (!theWorld.Powerups.ContainsKey(powerup!.power))
                         {
@@ -255,6 +258,14 @@ namespace SnakeGame
         {
             return PlayerID;
         }
+
+        // Needs to be of the form: {"moving":"left"}
+        public void SetDirection(string direction)
+        {
+            moving = direction; //idk if this line is necessary
+            MessageEntered("{\"moving\":\"" + direction + "\"}");
+        }
+
 
     }
 }

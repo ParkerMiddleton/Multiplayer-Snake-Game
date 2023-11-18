@@ -172,22 +172,22 @@ public partial class MainPage : ContentPage
         String text = entry.Text.ToLower();
         if (text == "w")
         {
-            //TODO: implement , ex: MVC Chat System 
-            // Move up
+            gameController.SetDirection("up");
         }
         else if (text == "a")
         {
-            // Move left
+            gameController.SetDirection("left");
         }
         else if (text == "s")
         {
-            // Move down
+            gameController.SetDirection("down");
         }
         else if (text == "d")
         {
-            // Move right
+            gameController.SetDirection("right");
         }
         entry.Text = "";
+        gameController.SetDirection("none");
     }
 
 
