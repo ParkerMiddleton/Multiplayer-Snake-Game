@@ -12,7 +12,8 @@ namespace SnakeGame
         public Dictionary<int, Wall> Walls { get; set; }
         public Dictionary<int, Powerup> Powerups { get; set; }
 
-        private int size { get; set; }
+        
+        public int size { get; set; }
 
         public World(int _size)
         {

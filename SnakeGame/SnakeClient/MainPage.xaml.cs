@@ -1,4 +1,6 @@
-﻿namespace SnakeGame;
+﻿using System;
+
+namespace SnakeGame;
 /*
  Parker's Notes: 
 I spent a good amount of time tonight reading through the requirements and 
@@ -137,6 +139,10 @@ public partial class MainPage : ContentPage
         graphicsView.Invalidate();
         gameController.Error += DisplayErrorMessage;
         gameController.MessagesArrived += DisplayInServerBar;
+        gameController.UpdateArrived += OnFrame; // any time an update arrives, invalidate. 
+
+        worldPanel.SetWorld(gameController.GetWorld());
+        worldPanel.SetPlayerID(gameController.GetPlayerID());
     }
 
     /// <summary>
@@ -145,17 +151,15 @@ public partial class MainPage : ContentPage
     /// <param name="messages"></param>
     private void DisplayInServerBar(IEnumerable<string> messages)
     {
-
+        World world = gameController.GetWorld();
         Dispatcher.Dispatch(
-          () => dataRecievedLabel.Text = messages.First());
-
+          () => dataRecievedLabel.Text = messages.First().ToString());
     }
 
     private void DisplayErrorMessage(string error)
     {
-        Dispatcher.Dispatch(() => DisplayAlert("error", error, "okay"));
+        Dispatcher.Dispatch(() => DisplayAlert("Error", error, "Okay"));
     }
-
 
     void OnTapped(object sender, EventArgs args)
     {
@@ -168,6 +172,7 @@ public partial class MainPage : ContentPage
         String text = entry.Text.ToLower();
         if (text == "w")
         {
+            //TODO: implement , ex: MVC Chat System 
             // Move up
         }
         else if (text == "a")
@@ -185,11 +190,6 @@ public partial class MainPage : ContentPage
         entry.Text = "";
     }
 
-    private void NetworkErrorHandler()
-    {
-        // dispatcher here? 
-        DisplayAlert("Error", "Disconnected from server", "OK");
-    }
 
 
     /// <summary>
@@ -227,6 +227,10 @@ public partial class MainPage : ContentPage
     public void OnFrame()
     {
         Dispatcher.Dispatch(() => graphicsView.Invalidate());
+
+        //Always sending the current player and the state of the world to the view to be drawn.
+        worldPanel.SetWorld(gameController.GetWorld());
+        worldPanel.SetPlayerID(gameController.GetPlayerID());
     }
 
     private void ControlsButton_Clicked(object sender, EventArgs e)

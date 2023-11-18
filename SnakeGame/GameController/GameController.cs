@@ -1,5 +1,6 @@
 ﻿using NetworkUtil;
 using System.Numerics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -18,14 +19,24 @@ namespace SnakeGame
 
     public class GameController
     {
+        // for sending moving commands to the server. 
         [JsonInclude]
         string? moving;
+
+        //represents world status
+        private World theWorld = new World(1);
+
+        //represents current playerID
+        private int PlayerID = -1;
+
+        //Represents server connection 
+        SocketState? theServer = null;
 
         /// <summary>
         /// a delegate and event combo for talking back to the view and sending data to the server and model
         /// Note: parameters for the delegates here only are used to send data back to the view
         /// </summary>
-        public delegate void ConnectedHandler(); 
+        public delegate void ConnectedHandler();
         public event ConnectedHandler? Connected;
 
         /// <summary>
@@ -37,7 +48,6 @@ namespace SnakeGame
         public event ErrorHandler? Error;
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="messages"></param>
         public delegate void MessageHandler(IEnumerable<string> messages);
@@ -46,14 +56,7 @@ namespace SnakeGame
         // A delegate and event to fire when the controller
         // has received and processed new info from the server
         public delegate void GameUpdateHandler();
-        public event GameUpdateHandler? UpdateArrived; // some method that updates theWorld object with new stuff from the server. 
-
-
-        /// <summary>
-        /// represents the state of the server connection
-        /// </summary>
-        SocketState? theServer = null;
-
+        public event GameUpdateHandler? UpdateArrived;
 
         /// <summary>
         /// Starts the process for connecting to the server. 
@@ -134,6 +137,21 @@ namespace SnakeGame
                 // So we need to ignore it if this happens. 
                 if (p[p.Length - 1] != '\n')
                     break;
+                if (int.TryParse(p, out int numberNotJSON))
+                {
+                    if (PlayerID == -1)
+                    {
+                        PlayerID = numberNotJSON;
+                    }
+                    else
+                    {
+                        theWorld = new World(numberNotJSON);
+                    }
+                }
+                else
+                {
+                    JsonUpdater(p);
+                }
 
                 // build a list of messages to send to the view
                 newMessages.Add(p);
@@ -142,8 +160,9 @@ namespace SnakeGame
                 state.RemoveData(0, p.Length);
             }
 
+
             // inform the view
-           MessagesArrived?.Invoke(newMessages);
+            MessagesArrived?.Invoke(newMessages); // leave this for now for testing
 
         }
 
@@ -165,8 +184,69 @@ namespace SnakeGame
                 Networking.Send(theServer.TheSocket, message + "\n");
         }
 
+        /// <summary>
+        /// Extracts JSON and turns data into objects that are then added to the world.
+        /// </summary>
+        /// <param name="state"></param>
+        private void JsonUpdater(string data)
+        {
+            try
+            {
+                JsonDocument.Parse(data);
+                lock (theWorld)
+                {
 
+                    if (data.Contains("snake"))
+                    {
+                        Snake? snake = JsonSerializer.Deserialize<Snake>(data);
+                        if (!theWorld.Players.ContainsKey(snake!.snake))
+                        {
+                            theWorld!.Players.Add(snake!.snake, snake);
+                        }
+                        else
+                        {
+                            theWorld.Players[snake!.snake] = snake;
+                        }
+                    }
+                    else if (data.Contains("wall"))
+                    {
+                        Wall? wall = JsonSerializer.Deserialize<Wall>(data);
+                        theWorld!.Walls.Add(wall!.wall, wall);
+                    }
+                    else if (data.Contains("power"))
+                    {
+                        Powerup? powerup = JsonSerializer.Deserialize<Powerup>(data);
+                        if (!theWorld.Powerups.ContainsKey(powerup!.power))
+                        {
+                            theWorld!.Powerups.Add(powerup!.power, powerup);
+                        }
+                        else
+                        {
+                            theWorld!.Powerups[powerup!.power] = powerup;
+                        }
 
+                    }
+                    UpdateArrived?.Invoke();
+                }
+            }
+            catch (JsonException)
+            {
+                //TODO: Something to tell the client that the JSON wasnt caught, just for testing purposes.
+            }
+        }
+        /// <summary>
+        /// Getter for the World object. 
+        /// </summary>
+        /// <returns>World State</returns>
+        public World GetWorld()
+        {
+            return theWorld!;
+        }
+
+        public int GetPlayerID()
+        {
+            return PlayerID;
+        }
 
     }
 }

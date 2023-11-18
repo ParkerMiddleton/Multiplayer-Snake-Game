@@ -5,21 +5,16 @@ namespace SnakeGame
 {
     public class Powerup
     {
-        [JsonInclude]
-        private int power;
-
-        [JsonInclude]
-        private Vector2D loc;
-
-        [JsonInclude]
-        private bool died;
+        public int power{ get; set; }
+        public Vector2D loc { get; set; }
+        public bool died { get; set; }
 
         [JsonConstructor]
-        public Powerup(int _power, Vector2D _loc, bool _died)
+        public Powerup(int power, Vector2D loc, bool died)
         {
-            this.power = _power;
-            this.loc = _loc;
-            this.died = _died;
+            this.power = power;
+            this.loc = loc;
+            this.died = died;
 
         }
 

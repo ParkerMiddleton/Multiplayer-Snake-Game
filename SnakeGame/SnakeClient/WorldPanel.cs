@@ -18,6 +18,7 @@ using Microsoft.Maui.Controls;
 using ABI.System.Numerics;
 using Microsoft.UI.Xaml.Controls;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace SnakeGame;
 
@@ -27,18 +28,11 @@ public class WorldPanel : IDrawable
     private IImage wall;
     private IImage background;
 
-    // A delegate for DrawObjectWithTransform
-    // Methods matching this delegate can draw whatever they want onto the canvas
     public delegate void ObjectDrawer(object o, ICanvas canvas);
 
     private World theWorld;
-
-    // for use of drawing dummy data for the view
-    // ideally this would come from the server in the form of json
-    Wall wall23 = new Wall(23, new Vector2D(100, -100), new Vector2D(150, 300));
-    Wall wall22 = new Wall(22, new Vector2D(100, -200), new Vector2D(150, 450));
-    Snake snake = new Snake(1, "snake", new List<Vector2D> { new Vector2D(100, -100), new Vector2D(150, 300) }, new Vector2D(), 0, false, true, false, true);
-
+    private int playerID;
+    private int viewSize = 900;
 
     private bool initializedForDrawing = false;
 
@@ -58,10 +52,16 @@ public class WorldPanel : IDrawable
 
     public WorldPanel()
     {
-        theWorld = new World(1200);
-        theWorld.Walls.Add(wall23.wall, wall23);
-        theWorld.Walls.Add(wall22.wall, wall22);
-        theWorld.Players.Add(snake.snake, snake);
+    }
+
+    public void SetWorld(World world)
+    {
+        theWorld = world;
+    }
+
+    public void SetPlayerID(int ID)
+    {
+        playerID = ID;
     }
 
     private void InitializeDrawing()
@@ -79,28 +79,38 @@ public class WorldPanel : IDrawable
         // undo previous transformations from last frame
         canvas.ResetState();
 
-
-        //float playerX = //... (the player's world-space Y coordinate)
-        //float playerY = //... (the player's world-space Y coordinate)
-        // example code for how to draw
-        //canvas.Translate(-playerX + (viewSize / 2), -playerY + (viewSize / 2));
-        canvas.DrawImage(background, 0, 0, 2000, 2000);
+        canvas.DrawImage(background, 0, 0, 900, 900);
         lock (theWorld)
         {
-            //GetsSnakes 
-            foreach (var p in theWorld.Players.Values)
+            //Basically if the player hasnt connected to the server yet, dont draw and center on screen. 
+            //This should only matter within the first few frames of starting the server. 
+            if (playerID != -1)
             {
-                canvas.StrokeColor = Colors.HotPink;
+                Snake currentPlayer = theWorld.Players[playerID];
+                float playerX = (float)currentPlayer.body.First().GetX();
+                float playerY = (float)currentPlayer.body.First().GetY();
+
+                //Centers current player on screen.
+                canvas.Translate(-playerX + (viewSize / 2), -playerY + (viewSize / 2));
+            }
+
+            //Draw Snakes
+            foreach (var p in theWorld.Players.Values)
                 DrawObjectWithTransform(canvas, p,
                   p.body[0].GetX(), p.body[0].GetY(), p.dir.ToAngle(),
                   SnakeSegmentDrawer);
-            }
 
-
+            //Draw Walls
             foreach (var p in theWorld.Walls.Values)
                 DrawObjectWithTransform(canvas, p,
                   p.p1.GetX(), p.p2.GetY(), 0,
                   WallDrawer);
+
+            //Draw Powerups
+            foreach (var p in theWorld.Powerups.Values)
+                DrawObjectWithTransform(canvas, p, p.loc.GetX(),
+                    p.loc.GetY(), 0,
+                    PowerupDrawer);
 
         }
     }
@@ -114,8 +124,8 @@ public class WorldPanel : IDrawable
     {
         Wall p = o as Wall;
         // scale the ships down a bit
-        float w = wall.Width * 0.4f;
-        float h = wall.Height * 0.4f;
+        float w = 50;
+        float h = 50;
 
         // Images are drawn starting from the top-left corner.
         // So if we want the image centered on the player's location, we have to offset it
@@ -123,14 +133,40 @@ public class WorldPanel : IDrawable
         canvas.DrawImage(wall, -w / 2, -h / 2, w, h);
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="o">The player to draw</param>
+    /// <param name="canvas"></param>
+    private void PowerupDrawer(object o, ICanvas canvas)
+    {
+        Powerup p = o as Powerup;
+        float width = 10;
+        if (p.power % 2 == 0)
+            canvas.FillColor = Colors.Orange;
+        else
+            canvas.FillColor = Colors.Red;
+
+        // Ellipses are drawn starting from the top-left corner.
+        // So if we want the circle centered on the powerup's location, we have to offset it
+        // by half its size to the left (-width/2) and up (-height/2)
+        canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="o"></param>
+    /// <param name="canvas"></param>
     private void SnakeSegmentDrawer(object o, ICanvas canvas)
     {
         Snake snake = o as Snake;
         int snakeSegmentLength = 20;
-        canvas.DrawLine( 0,0,0, -snakeSegmentLength);
+        canvas.StrokeSize = 10;
+        canvas.FillColor = Colors.HotPink;
+        canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
 
     }
-
     /// <summary>
     /// This method performs a translation and rotation to draw an object.
     /// </summary>
