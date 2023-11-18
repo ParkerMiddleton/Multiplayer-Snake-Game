@@ -22,12 +22,50 @@ using System.Runtime.CompilerServices;
 
 namespace SnakeGame;
 
-
+/// <summary>
+/// For Abbey:
+/// Since the last time we talked:
+/// 
+/// I was able to parse the JSON from the server then update the world object with it. 
+/// The world object and player ID, which are the first two things that are sent in the protocol by the server, are continuously passed to the 
+/// view via getters and setters via OnFrame event. Basically they are always passed every frame. 
+/// 
+/// I was able to get all objects to display on screen. A snake, all powerups and all walls are present but not without any bugs. 
+/// 
+/// Known issues: 
+///-> The snake hits random unseen objects, then dies. 
+///   This probably happens because the edges of the worldpanel are not being displayed
+///   or because there are invisable wall objects that the snake is hitting... Not sure on this one though. 
+///   
+///-> The background never changes and always moves with the snake. 
+///   The snake should be able to traverse the background instead of having it move with it.
+///   
+/// Still TODO: 
+/// -> Controller implementation - w,a,s,d stuff in MainPage.xaml.cs
+///
+/// -> Display name and score above snake's head
+///    This should always display in the same direction the snake is fasing. So if direction is Vector2D(X=1,Y=0) then the name should 
+///    be paralell to the right side of the screen, the same direction the snake is traveling. 
+///
+/// -> Properly drawing a snake in general 
+///    The code in its current state just draws the head and tail for some reason, not sure if this is a glitch or not.
+///    This might be better to implement after controls are implemented and above bugs are fixed. 
+/// 
+/// I think this is it for now. I'm sure that other issues will arise. But we are certainly over halfway there. 
+/// 
+/// </summary>
 public class WorldPanel : IDrawable
 {
     private IImage wall;
     private IImage background;
 
+    /// <summary>
+    /// Note: This is super important. 
+    /// basically every object that is drawn on this screen needs to be a version of this
+    /// So far we have "snakeSegmentDrawer", "WallDrawer" and "PowerupDrawer". 
+    /// </summary>
+    /// <param name="o"></param>
+    /// <param name="canvas"></param>
     public delegate void ObjectDrawer(object o, ICanvas canvas);
 
     private World theWorld;
@@ -50,15 +88,32 @@ public class WorldPanel : IDrawable
         }
     }
 
+    /// <summary>
+    /// "Main method" for world panel. 
+    /// Any start up code should probably go here
+    /// </summary>
     public WorldPanel()
     {
     }
 
+
+    /// <summary>
+    /// A setter for current world state 
+    /// Note: This only exisits so the edited world object can be passed to the view
+    /// Interacts with:  OnFrame and MainPage Startup method. 
+    /// </summary>
+    /// <param name="world"></param>
     public void SetWorld(World world)
     {
         theWorld = world;
     }
 
+    /// <summary>
+    /// A setter for current player's ID.
+    /// Note: This only exisits so the player can always be focused on screen
+    /// Interacts with:  OnFrame and MainPage Startup method. 
+    /// </summary>
+    /// <param name="ID"></param>
     public void SetPlayerID(int ID)
     {
         playerID = ID;
@@ -73,12 +128,14 @@ public class WorldPanel : IDrawable
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
+        // start up condition
         if (!initializedForDrawing)
             InitializeDrawing();
 
         // undo previous transformations from last frame
         canvas.ResetState();
-
+        
+        // draw background image before world objects, as per instructions
         canvas.DrawImage(background, 0, 0, 900, 900);
         lock (theWorld)
         {

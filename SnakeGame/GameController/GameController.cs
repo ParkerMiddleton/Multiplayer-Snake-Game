@@ -48,13 +48,17 @@ namespace SnakeGame
         public event ErrorHandler? Error;
 
         /// <summary>
+        /// Note: So far this is being used for the test purposes JSON window. Im not sure that we'll need this event 
+        /// and delegate combo in the future. 
         /// </summary>
         /// <param name="messages"></param>
         public delegate void MessageHandler(IEnumerable<string> messages);
         public event MessageHandler? MessagesArrived;
 
-        // A delegate and event to fire when the controller
-        // has received and processed new info from the server
+        /// <summary>
+        /// A delegate and event to fire when the controller
+        /// has received and processed new info from the server
+        /// </summary>
         public delegate void GameUpdateHandler();
         public event GameUpdateHandler? UpdateArrived;
 
@@ -243,6 +247,10 @@ namespace SnakeGame
             return theWorld!;
         }
 
+        /// <summary>
+        /// Getter for current Player ID as sent by the server. 
+        /// </summary>
+        /// <returns></returns>
         public int GetPlayerID()
         {
             return PlayerID;
