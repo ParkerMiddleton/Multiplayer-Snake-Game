@@ -262,7 +262,6 @@ namespace SnakeGame
         // Needs to be of the form: {"moving":"left"}
         public void SetDirection(string direction)
         {
-            moving = direction; //idk if this line is necessary
             MessageEntered("{\"moving\":\"" + direction + "\"}");
         }
 
