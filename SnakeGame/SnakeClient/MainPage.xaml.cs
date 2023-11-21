@@ -200,7 +200,10 @@ public partial class MainPage : ContentPage
     /// </summary>
     public void OnFrame()
     {
-        Dispatcher.Dispatch(() => graphicsView.Invalidate());
+        Dispatcher.Dispatch(() =>
+        
+        
+        graphicsView.Invalidate());
 
         //Always sending the current player and the state of the world to the view to be drawn.
         worldPanel.SetWorld(gameController.GetWorld());

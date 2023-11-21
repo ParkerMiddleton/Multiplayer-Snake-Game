@@ -24,10 +24,12 @@ namespace SnakeGame
         string? moving;
 
         //represents world status
-        private World theWorld = new World(1);
+        private World theWorld = new World(0);
 
         //represents current playerID
         private int PlayerID = -1;
+
+        private string? playerName;
 
         //Represents server connection 
         SocketState? theServer = null;
@@ -68,11 +70,8 @@ namespace SnakeGame
         /// <param name="ServerText"></param>
         public void Connect(string ServerText, string nameText)
         {
-
-
             Networking.ConnectToServer(OnConnect, ServerText, 11000);
-            MessageEntered(nameText);
-
+            playerName = nameText;
         }
 
         /// <summary>
@@ -89,6 +88,7 @@ namespace SnakeGame
             }
 
             theServer = state;
+            MessageEntered(playerName!);
 
             // Start an event loop to receive messages from the server
             state.OnNetworkAction = ReceiveMessage;
@@ -109,11 +109,8 @@ namespace SnakeGame
                 return;
             }
             ProcessMessages(state);
+            
 
-            // Continue the event loop
-            // state.OnNetworkAction has not been changed, 
-            // so this same method (ReceiveMessage) 
-            // will be invoked when more data arrives
             Networking.GetData(state);
         }
 
