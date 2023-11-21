@@ -15,6 +15,11 @@ namespace SnakeGame
         public bool dc { get; set; }
         public bool join { get; set; }
 
+        public Snake()
+        {
+
+        }
+
         [JsonConstructor]
         public Snake(int snake, string name, List<Vector2D> body, Vector2D dir, int score, bool died, bool alive, bool dc, bool join)
         {

@@ -2,17 +2,6 @@
 
 namespace SnakeGame;
 /*
- Parker's Notes: 
-I spent a good amount of time tonight reading through the requirements and 
-gathering about different tasks for this project. The specifications for this assignments 
-are semi vauge, which just means that it'll be helpful to create our own TODO list. 
-
-Takaways from the PS8 assignment, Piazza posts and various documentatinos 
-
-*This project will contain a number of different projects, all of which should be of typev class library .NET7.0
-of course with the exception of SnakeClient which will act as the view. 
-
-*Breakdown of MVC in terms of projects
 View: 
 SnakeClient -> entire folder, but mainly this file, MainPage.xaml.cs 
             -> this should not contain a reference to NetowkController since it shouldnt handle any network stuff
@@ -115,9 +104,6 @@ NetworkProtocol: (Copied from PS8 instructions)
    must be able to handle this gracefully. 
 8) All messages in the communication protocol(both ways) are terminated by a '\n'.
 
-
-*In general each class should be "self contained" and represent one concern of the overall system. 
-
 *TA Jo's advice on starting the project 
 "The first thing that I would try to accomplish is the entire handshake process. 
 This means that you should be able to connect to the server, initiate the handshake,
@@ -125,7 +111,6 @@ and then receive your player ID, world size, and wall locations back.
 It would then be wise to create your world information (players, food, etc) data structures and classes
 so that you can deserialize and store the information continuously sent after the handshake."
  
-
  */
 
 
@@ -137,23 +122,11 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         graphicsView.Invalidate();
-        gameController.Error += DisplayErrorMessage;
-        gameController.MessagesArrived += DisplayInServerBar;
-        gameController.UpdateArrived += OnFrame; // any time an update arrives, invalidate. 
+        gameController.Error += DisplayErrorMessage; 
+        gameController.UpdateArrived += OnFrame; 
 
         worldPanel.SetWorld(gameController.GetWorld());
         worldPanel.SetPlayerID(gameController.GetPlayerID());
-    }
-
-    /// <summary>
-    /// For testing purposes. Delete for final submit. This should just spit back the JSON data from the server. 
-    /// </summary>
-    /// <param name="messages"></param>
-    private void DisplayInServerBar(IEnumerable<string> messages)
-    {
-        World world = gameController.GetWorld();
-        Dispatcher.Dispatch(
-          () => dataRecievedLabel.Text = messages.First().ToString());
     }
 
     private void DisplayErrorMessage(string error)
@@ -190,8 +163,6 @@ public partial class MainPage : ContentPage
         gameController.SetDirection("none");
     }
 
-
-
     /// <summary>
     /// Event handler for the connect button
     /// We will put the connection attempt interface here in the view.
@@ -216,9 +187,12 @@ public partial class MainPage : ContentPage
             return;
         }
 
+
         //Starts the connection process with the controller.
-        gameController.Connect(serverText.Text, nameText.Text);
+        string playerName = nameText.Text;
+        gameController.Connect(serverText.Text, playerName);
         keyboardHack.Focus();
+        connectButton.IsEnabled = false;
     }
 
     /// <summary>

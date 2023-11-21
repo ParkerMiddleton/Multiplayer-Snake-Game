@@ -20,6 +20,7 @@ using Microsoft.Maui.Controls;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
+using Microsoft.UI.Xaml.Controls;
 
 namespace SnakeGame;
 
@@ -135,87 +136,90 @@ public class WorldPanel : IDrawable
 
         //undo previous transition from last frame
         canvas.ResetState();
-        // draw background image before world objects, as per instructions
-        canvas.DrawImage(background, 0, 0, 900, 900);
+
+        // draw background
+        canvas.DrawImage(background, (-theWorld.size / 2), (-theWorld.size / 2), theWorld.size, theWorld.size);
+
 
         lock (theWorld)
         {
-            Snake currentPlayer = theWorld.Players[playerID];
-            float playerX = (float)currentPlayer.body.First().GetX();
-            float playerY = (float)currentPlayer.body.First().GetY();
 
-            //centereing view on snake
-            float translationX = -playerX + (viewSize / 2);
-            float translationY = -playerY + (viewSize / 2);
-            canvas.Translate(translationX, translationY);
+            if (playerID != -1)
+            {
+                Snake currentPlayer = theWorld.Players[playerID];
+                float playerX = (float)currentPlayer.body.First().GetX();
+                float playerY = (float)currentPlayer.body.First().GetY();
 
+                //centereing view on snake
+                float translationX = -playerX + (viewSize / 2);
+                float translationY = -playerY + (viewSize / 2);
+                canvas.Translate(translationX, translationY);
+            }
 
             // Draw Snakes
             foreach (var p in theWorld.Players.Values)
-            {
                 DrawObjectWithTransform(canvas, p,
                     p.body[0].GetX(), p.body[0].GetY(), p.dir.ToAngle(),
                     SnakeSegmentDrawer);
-            }
 
-                //Draw Walls ex: {"wall":1,"p1":{"x":-575.0,"y":575.0},"p2":{"x":-575.0,"y":-575.0}}
-                foreach (var p in theWorld.Walls.Values)
+            //Draw Walls
+            foreach (var p in theWorld.Walls.Values)
+            {
+                // if wall layer is drawn in the x direction
+                if (p.p1.GetX() == p.p2.GetX())
                 {
-                    DrawObjectWithTransform(canvas, p,
-                      p.p1.GetX(), p.p1.GetY(), 0,
-                      WallDrawer);
-                    DrawObjectWithTransform(canvas, p,
-                      p.p2.GetX(), p.p2.GetY(), 0,
-                      WallDrawer);
+                    double distance = Math.Abs((p.p2.GetY() - p.p1.GetY()));
+                    int numberOfWalls = (int)(distance / 50);
 
-                    if (p.p1.GetX() == p.p2.GetX())
+                    double pointY = p.p1.GetY();
+                    if (p.p1.GetY() < p.p2.GetY())
                     {
-                        double distance = Math.Abs((p.p2.GetY() - p.p1.GetY()) - 50);
-                        int numberOfWalls = (int)(distance / 50);
-                        int upY = 50;
-                        if (p.p1.GetY() < p.p2.GetY())
+                        for (int i = 0; i < numberOfWalls; i++)
                         {
-
-                            for (int i = 1; i == numberOfWalls; i++)
-                            {
-                                double pointY = p.p1.GetY() + upY;
-                                DrawObjectWithTransform(canvas, p, p.p1.GetX(), pointY, 0, WallDrawer);
-                                upY = +50;
-                            }
-                        }
-                        int downY = -50;
-                        for (int i = 1; i == numberOfWalls; i++)
-                        {
-                            double pointY = p.p1.GetY() + downY;
                             DrawObjectWithTransform(canvas, p, p.p1.GetX(), pointY, 0, WallDrawer);
-                            downY = -50;
+                            pointY += 50;
                         }
                     }
-                    else if (p.p1.GetY() == p.p2.GetY())
+                    else
                     {
-                        double distance = Math.Abs((p.p2.GetX() - p.p1.GetX()) - 50);
-                        int numberOfWalls = (int)(distance / 50);
-                        int upX = 50;
-                        if (p.p1.GetX() < p.p2.GetX())
+                        for (int i = 0; i < numberOfWalls; i++)
                         {
-                            for (int i = 1; i <= numberOfWalls; i++)
-                            {
-                                double pointX = p.p1.GetX() + upX;
-                                DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
-                                upX = 50;
-                            }
-                        }
-                        int downX = -50;
-                        for (int i = 1; i == numberOfWalls; i++)
-                        {
-                            double pointX = p.p1.GetY() + downX;
-                            DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
-                            downX = -50;
+                            DrawObjectWithTransform(canvas, p, p.p1.GetX(), pointY, 0, WallDrawer);
+                            pointY -= 50;
                         }
                     }
+
                 }
 
-            
+                // if wall layer drawn in the Y direction 
+                if (p.p1.GetY() == p.p2.GetY())
+                {
+                    // - 50 here because we drew the first walls initially, this could be unneccessary. 
+                    double distance = Math.Abs((p.p2.GetX() - p.p1.GetX()));
+                    int numberOfWalls = (int)(distance / 50);
+
+                    double pointX = p.p1.GetX();
+                    if (p.p1.GetX() < p.p2.GetX())
+                    {
+                        for (int i = 0; i < numberOfWalls; i++)
+                        {
+                            DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
+                            // increment upwards by 50. 
+                            pointX += 50;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < numberOfWalls; i++)
+                        {
+                            DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
+                            // decrement downwards by 50
+                            pointX -= 50;
+                        }
+                    }
+
+                }
+            }
 
             // Draw Powerups
             foreach (var p in theWorld.Powerups.Values)
@@ -234,17 +238,16 @@ public class WorldPanel : IDrawable
     private void WallDrawer(object o, ICanvas canvas)
     {
         Wall p = o as Wall;
-        
-        float w = 50;
-        float h = 50;
-
+        float width = wall.Width;
+        float height = wall.Height;
         // Images are drawn starting from the top-left corner.
         // So if we want the image centered on the player's location, we have to offset it
         // by half its size to the left (-width/2) and up (-height/2)
-       canvas.DrawImage(wall, -w / 2, -h / 2, w, h);
+        canvas.DrawImage(wall, (width / 2), (height / 2), width, height);
+
     }
 
-   
+
 
     /// <summary>
     ///
@@ -273,17 +276,17 @@ public class WorldPanel : IDrawable
     /// <param name="canvas"></param>
     private void SnakeSegmentDrawer(object o, ICanvas canvas)
     {
-      
+
         Color[] colors = { Colors.Red, Colors.Blue, Colors.Green, Colors.Indigo, Colors.HotPink, Colors.Lavender, Colors.LightGreen, Colors.Orange };
-        
+
         Snake snake = o as Snake;
         int snakeSegmentLength = 20;
-        
+
         int snakeSize = snakeSegmentLength + (snake.score * 20);
 
 
         canvas.StrokeSize = 10;
-        canvas.StrokeColor = colors[snake.snake];
+        canvas.StrokeColor = colors[playerID % 8];
         canvas.StrokeLineCap = LineCap.Round;
         canvas.DrawLine(0, 0, 0, -snakeSize);
 
@@ -298,13 +301,14 @@ public class WorldPanel : IDrawable
         canvas.DrawString(nameScore, -20, -10 - snakeSize, 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
 
         //explosion
-        if(snake.died == true)
+        if (snake.died == true)
         {
             canvas.StrokeSize = 10;
             canvas.FillColor = Colors.Red;
             canvas.DrawEllipse(0, 0, 80, 80);
-            
+
         }
+
         //exploring timeout -- can be deleted eventually
         if (snake.alive == false)
         {
@@ -315,6 +319,8 @@ public class WorldPanel : IDrawable
 
         }
     }
+
+
     /// <summary>
     /// This method performs a translation and rotation to draw an object.
     /// </summary>

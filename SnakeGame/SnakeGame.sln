@@ -3,19 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34018.315
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkController", "NetworkController\NetworkController.csproj", "{F65AE8A8-00BA-457F-B27C-C0EDE7185889}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkTestHelper", "NetworkTestHelper\NetworkTestHelper.csproj", "{6B045EC2-8015-4401-B629-D3EDA493DEE4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetworkTests", "NetworkTests\NetworkTests.csproj", "{97C09A69-1DA9-4C48-AA53-AA83EF9D975B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnakeClient", "SnakeClient\SnakeClient.csproj", "{B71EE951-E244-4F02-95E1-C19AE985095F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vector2D", "Vector2D\Vector2D.csproj", "{08BCA56B-C97C-413B-A8D9-607D6A94E669}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameController", "GameController\GameController.csproj", "{8A4DE7D3-FF25-45EA-A33F-8E0911910666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "World", "World\World.csproj", "{8AFC3D1E-E8FF-4BC6-8F94-22FBADF193D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "World", "World\World.csproj", "{8AFC3D1E-E8FF-4BC6-8F94-22FBADF193D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,18 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F65AE8A8-00BA-457F-B27C-C0EDE7185889}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F65AE8A8-00BA-457F-B27C-C0EDE7185889}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F65AE8A8-00BA-457F-B27C-C0EDE7185889}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F65AE8A8-00BA-457F-B27C-C0EDE7185889}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B045EC2-8015-4401-B629-D3EDA493DEE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B045EC2-8015-4401-B629-D3EDA493DEE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B045EC2-8015-4401-B629-D3EDA493DEE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B045EC2-8015-4401-B629-D3EDA493DEE4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{97C09A69-1DA9-4C48-AA53-AA83EF9D975B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{97C09A69-1DA9-4C48-AA53-AA83EF9D975B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{97C09A69-1DA9-4C48-AA53-AA83EF9D975B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{97C09A69-1DA9-4C48-AA53-AA83EF9D975B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B71EE951-E244-4F02-95E1-C19AE985095F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B71EE951-E244-4F02-95E1-C19AE985095F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B71EE951-E244-4F02-95E1-C19AE985095F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU

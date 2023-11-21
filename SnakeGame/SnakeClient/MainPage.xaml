@@ -23,27 +23,23 @@
             <HorizontalStackLayout HorizontalOptions="Center">
                 <Label Text="server: " VerticalOptions="Center" />
                 <Entry Text="localhost" x:Name="serverText" />
-                
+
                 <Label Text="name: " VerticalOptions="Center" />
                 <Entry Text="player" x:Name="nameText" />
-                
+
                 <Button Text="connect"
                         Clicked="ConnectClick"
                         x:Name="connectButton"/>
-                
+
                 <Button Text="help"
                         Clicked="ControlsButton_Clicked"/>
-                
+
                 <Button Text="about"
                         Clicked="AboutButton_Clicked"/>
-                
+
                 <Entry MaxLength="1" IsVisible="true"
                        TextChanged="OnTextChanged" x:Name="keyboardHack" />
             </HorizontalStackLayout>
-            <Editor 
-                     x:Name="dataRecievedLabel"
-                     Text="recieved data"
-                     HeightRequest="200" />
             <Border Stroke="Brown"
                     StrokeThickness="10"
                     StrokeShape="Rectangle"

@@ -15,6 +15,11 @@ namespace SnakeGame
         
         public int size { get; set; }
 
+        public World()
+        {
+
+        }
+
         public World(int _size)
         {
             

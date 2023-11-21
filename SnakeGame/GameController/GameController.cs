@@ -68,8 +68,11 @@ namespace SnakeGame
         /// <param name="ServerText"></param>
         public void Connect(string ServerText, string nameText)
         {
+
+
             Networking.ConnectToServer(OnConnect, ServerText, 11000);
             MessageEntered(nameText);
+
         }
 
         /// <summary>
@@ -84,9 +87,6 @@ namespace SnakeGame
                 Error?.Invoke("Error connecting to server");
                 return;
             }
-
-            // inform the view
-            Connected?.Invoke();
 
             theServer = state;
 
@@ -196,13 +196,14 @@ namespace SnakeGame
         {
             try
             {
+
                 JsonDocument.Parse(data);
                 lock (theWorld)
                 {
 
                     if (data.Contains("snake"))
                     {
-                        
+
                         Snake? snake = JsonSerializer.Deserialize<Snake>(data);
                         if (!theWorld.Players.ContainsKey(snake!.snake))
                         {
@@ -215,13 +216,13 @@ namespace SnakeGame
                     }
                     else if (data.Contains("wall"))
                     {
-                        
+
                         Wall? wall = JsonSerializer.Deserialize<Wall>(data);
                         theWorld!.Walls.Add(wall!.wall, wall);
                     }
                     else if (data.Contains("power"))
                     {
-                       
+
                         Powerup? powerup = JsonSerializer.Deserialize<Powerup>(data);
                         if (!theWorld.Powerups.ContainsKey(powerup!.power))
                         {
@@ -233,7 +234,12 @@ namespace SnakeGame
                         }
 
                     }
-                    UpdateArrived?.Invoke();
+                    //if the client has recieved the information about world size and playerID
+                    if (theWorld.Players.Count > 0 && theWorld.size > 0)
+                    {
+                        UpdateArrived?.Invoke();
+                    }
+
                 }
             }
             catch (JsonException)
@@ -241,6 +247,7 @@ namespace SnakeGame
                 //TODO: Something to tell the client that the JSON wasnt caught, just for testing purposes.
             }
         }
+
         /// <summary>
         /// Getter for the World object. 
         /// </summary>
@@ -262,7 +269,9 @@ namespace SnakeGame
         // Needs to be of the form: {"moving":"left"}
         public void SetDirection(string direction)
         {
+
             MessageEntered("{\"moving\":\"" + direction + "\"}");
+
         }
 
 

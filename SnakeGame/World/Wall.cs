@@ -9,6 +9,10 @@ namespace SnakeGame
         public Vector2D p1 { get; set; }
         public Vector2D p2 { get; set; }
 
+        public Wall() {
+        
+        }
+
         [JsonConstructor]
         public Wall(int wall, Vector2D p1, Vector2D p2)
         {
