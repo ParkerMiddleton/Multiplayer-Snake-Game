@@ -196,7 +196,6 @@ namespace SnakeGame
         {
             try
             {
-
                 JsonDocument.Parse(data);
                 lock (theWorld)
                 {

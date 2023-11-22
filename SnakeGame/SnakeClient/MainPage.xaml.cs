@@ -118,6 +118,8 @@ public partial class MainPage : ContentPage
 {
     GameController gameController = new();
 
+    World theWorld;
+
     public MainPage()
     {
         InitializeComponent();
@@ -193,6 +195,8 @@ public partial class MainPage : ContentPage
         gameController.Connect(serverText.Text, playerName);
         keyboardHack.Focus();
         connectButton.IsEnabled = false;
+        serverText.IsEnabled = false;
+        nameText.IsEnabled = false;
     }
 
     /// <summary>
@@ -208,6 +212,7 @@ public partial class MainPage : ContentPage
         //Always sending the current player and the state of the world to the view to be drawn.
         worldPanel.SetWorld(gameController.GetWorld());
         worldPanel.SetPlayerID(gameController.GetPlayerID());
+        theWorld = gameController.GetWorld();
     }
 
     private void ControlsButton_Clicked(object sender, EventArgs e)

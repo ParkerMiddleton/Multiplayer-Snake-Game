@@ -9,6 +9,7 @@ using Microsoft.Maui.Graphics.Win2D;
 #endif
 using Color = Microsoft.Maui.Graphics.Color;
 using System.Reflection;
+using PointF = Microsoft.Maui.Graphics.PointF;
 using Microsoft.Maui;
 using System.Net;
 using Font = Microsoft.Maui.Graphics.Font;
@@ -41,11 +42,17 @@ public class WorldPanel : IDrawable
     private int viewSize = 900;
 
     private bool initializedForDrawing = false;
-
-    private Color[] colors = { Colors.Red,Colors.Blue,
-            Colors.Green, Colors.Indigo,
-            Colors.HotPink, Colors.Lavender,
-            Colors.LightGreen, Colors.Orange };
+    private Color[] colors = {Colors.Red, Colors.Yellow, Colors.AliceBlue, Colors.OrangeRed, Colors.WhiteSmoke,
+    Colors.Turquoise, Colors.Tan, Colors.Magenta , Colors.Aqua, Colors.Maroon, Colors.Moccasin};
+    private Color[][] colorPattern = { new Color[] {Colors.Red,Colors.PaleVioletRed},
+                                  new Color[]{Colors.Blue, Colors.Aqua},
+                                    new Color[]{Colors.DarkOrange, Colors.Orange},
+                                    new Color []{Colors.Green, Colors.LightGreen},
+                                    new Color []{Colors.Yellow, Colors.LightGoldenrodYellow},
+                                    new Color[] {Colors.Purple, Colors.MediumPurple},
+                                    new Color[]{Colors.Red, Colors.Orange, Colors.Yellow, Colors.Green, Colors.Blue, Colors.Purple},
+                                    new Color[]{Colors.Snow, Colors.LightGrey}
+             };
 
     private IImage loadImage(string name)
     {
@@ -111,29 +118,26 @@ public class WorldPanel : IDrawable
         //undo previous transition from last frame
         canvas.ResetState();
 
-        
-
-
         lock (theWorld)
         {
 
-            //basically dont draw until we have start data from the server
+            //Dont draw until we have start data from the server
             if (playerID != -1 && theWorld.size > 0)
             {
                 Snake currentPlayer = theWorld.Players[playerID];
                 float playerX = (float)currentPlayer.body.Last().GetX();
                 float playerY = (float)currentPlayer.body.Last().GetY();
 
-                //centereing view on snake
+                //Centereing view on snake
                 float translationX = (-playerX) + (viewSize / 2);
                 float translationY = (-playerY) + (viewSize / 2);
                 canvas.Translate(translationX, translationY);
 
-                // draw background
+                //Draw background
                 canvas.DrawImage(background, (-theWorld.size / 2), (-theWorld.size / 2), theWorld.size, theWorld.size);
 
 
-                // Draw Snakes
+                //Draw Snakes
                 foreach (Snake snake in theWorld.Players.Values)
                 {
                     // we are taking each segment in a snakes body now -- "body" - a List<Vector2D>
@@ -141,58 +145,54 @@ public class WorldPanel : IDrawable
                     // Each point in this list represents one vertex of the snake's body, where consecutive vertices
                     // make up a straight segment of the body. The first point of the list gives the location of the snake's tail,
                     // and the last gives the location of the snake's head. 
+
+
                     for (int i = 1; i < snake.body.Count; i++) //loop thru each segment 
                     {
                         Vector2D segmentStart = snake.body[i - 1]; //last actually first 
-                        Vector2D segmentEnd = snake.body[i]; 
-                        canvas.StrokeColor = colors[playerID % 8];
-                        canvas.StrokeSize = 5;
+                        Vector2D segmentEnd = snake.body[i];
+
+                        Color[] scheme = colorPattern[playerID % 8];
+                      
+                        canvas.StrokeColor = scheme[0];
+                        canvas.StrokeDashPattern = null;
+                        canvas.StrokeSize = 10;
+                        canvas.StrokeLineCap = LineCap.Round;
+                        canvas.StrokeLineJoin = LineJoin.Round;
                         canvas.DrawLine((float)segmentStart.X, (float)segmentStart.Y, (float)segmentEnd.X, (float)segmentEnd.Y);
+
+                        canvas.StrokeColor = scheme[1];
+                        canvas.StrokeDashPattern = new float[] { 2, 4 };
+                        canvas.DrawLine((float)segmentEnd.X, (float)segmentEnd.Y, (float)segmentStart.X, (float)segmentStart.Y);
+                        //eyes
+                        canvas.StrokeColor = Colors.Black;
+                        canvas.StrokeSize = 2;
+                        canvas.StrokeDashPattern = new float[] { 0.5f, 2f };
+                        canvas.DrawLine((float)segmentEnd.X + 2.5f , (float)segmentEnd.Y + 2.5f, (float)segmentEnd.X - 2.5f, (float)segmentEnd.Y - 2.5f);
+                        
+
+
 
                         string nameScore = $"{snake.name} - {snake.score}";
                         canvas.FontColor = Colors.White;
                         canvas.FontSize = 18;
                         canvas.Font = Font.Default;
                         canvas.DrawString(nameScore, (float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
-
-
                     }
-           
+
+                    
                     if (snake.died == true)
                     {
+
                         int i = 1;
-                        while (i <= 100) {
+                        while (i <= 100)
+                        {
                             canvas.StrokeSize = 10;
                             canvas.StrokeColor = Colors.Red;
                             canvas.DrawEllipse((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 20 + i, 20 + i);
                             i += 4;
                         }
-
                     }
-
-                    ////DrawObjectWithTransform(canvas, snake,
-                    //// snake.body[0].GetX(), snake.body[0].GetY(), snake.dir.ToAngle(),
-                    //// SnakeSegmentDrawer);
-
-                    foreach (Vector2D segment in snake.body)
-                    {
-                        canvas.DrawCircle((float)segment.X, (float)segment.Y, 5);
-                        //    double length = segment.Length();
-                        //    float x = (int)(segment.X - length);
-                        //    float y = (int)(segment.Y - length);
-                        //    canvas.DrawLine((float)segment.X, (float)segment.Y, (float)segment.X, (float)segment.Y);
-                        //    //canvas.DrawLine((float)segment.X, (float)segment.Y, (float)snake.body.First().GetX(), (float)snake.body.First().GetY());
-
-                        //    //segment.Normalize();
-                        //    canvas.StrokeColor = colors[playerID % 2];
-                        //    //int segmentlength = 10 + (snake.score * 2); // snake score is always 0
-                        //    double angle = segment.ToAngle();
-                        //    //DrawObjectWithTransform(canvas, segmentlength, segment.X, segment.Y, segment.ToAngle(), SnakeSegmentDrawer);
-                        //    //canvas.DrawLine((float) segment.X,(float)  segment.Y, (float)segment.X + 5, (float)segment.Y + 5);
-                    }
-
-
-                    
                 }
 
 
@@ -238,7 +238,6 @@ public class WorldPanel : IDrawable
                             for (int i = 0; i <= numberOfWalls; i++)
                             {
                                 DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
-                                // increment upwards by 50. 
                                 pointX += 50;
                             }
                         }
@@ -247,7 +246,6 @@ public class WorldPanel : IDrawable
                             for (int i = 0; i <= numberOfWalls; i++)
                             {
                                 DrawObjectWithTransform(canvas, p, pointX, p.p1.GetY(), 0, WallDrawer);
-                                // decrement downwards by 50
                                 pointX -= 50;
                             }
                         }
@@ -271,20 +269,15 @@ public class WorldPanel : IDrawable
 
 
     /// <summary>
-    /// A method that can be used as an ObjectDrawer delegate
+    /// Draw walls at specified location. 
     /// </summary>
     /// <param name="o">The player to draw</param>
     /// <param name="canvas"></param>
     private void WallDrawer(object o, ICanvas canvas)
     {
-        //Wall p = o as Wall;
         float width = 50;
         float height = 50;
-        // Images are drawn starting from the top-left corner.
-        // So if we want the image centered on the player's location, we have to offset it
-        // by half its size to the left (-width/2) and up (-height/2)
-        canvas.DrawImage(wall, -25, -25, width, height);
-
+        canvas.DrawImage(wall, -(width / 2), -(height / 2), width, height);
     }
 
     /// <summary>
@@ -296,15 +289,12 @@ public class WorldPanel : IDrawable
     {
         Powerup p = o as Powerup;
         float width = 10;
-        if (p.power % 2 == 0)
-            canvas.FillColor = Colors.Orange;
-        else
-            canvas.FillColor = Colors.Red;
-
-        // Ellipses are drawn starting from the top-left corner.
-        // So if we want the circle centered on the powerup's location, we have to offset it
-        // by half its size to the left (-width/2) and up (-height/2)
+        float outerWidth = 15;
+        canvas.FillColor = Colors.Orange;
+        canvas.FillEllipse(-(outerWidth / 2), -(outerWidth / 2), outerWidth, outerWidth);
+        canvas.FillColor = Colors.Green;
         canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
+
     }
 
     /// <summary>
@@ -319,7 +309,7 @@ public class WorldPanel : IDrawable
         canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
 
 
-        
+
     }
 
 
