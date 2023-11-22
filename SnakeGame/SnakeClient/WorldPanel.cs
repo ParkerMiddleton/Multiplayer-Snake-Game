@@ -18,7 +18,7 @@ using Microsoft.Maui.Controls;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
-using Microsoft.UI.Xaml.Controls;
+//using Microsoft.UI.Xaml.Controls;
 
 namespace SnakeGame;
 
@@ -136,37 +136,63 @@ public class WorldPanel : IDrawable
                 // Draw Snakes
                 foreach (Snake snake in theWorld.Players.Values)
                 {
-
-                    foreach (Vector2D segment in snake.body)
+                    // we are taking each segment in a snakes body now -- "body" - a List<Vector2D>
+                    // representing the entire body of the snake. (See below for description of Vector2D).
+                    // Each point in this list represents one vertex of the snake's body, where consecutive vertices
+                    // make up a straight segment of the body. The first point of the list gives the location of the snake's tail,
+                    // and the last gives the location of the snake's head. 
+                    for (int i = 1; i < snake.body.Count; i++) //loop thru each segment 
                     {
-                        //canvas.DrawCircle((float)segment.X, (float) segment.Y, 5);
-                        segment.Normalize();
-                        canvas.StrokeColor = colors[playerID % 2];
-                        int segmentlength = 10 + (snake.score * 2); // snake score is always 0
-                        double angle = segment.ToAngle();
-                        DrawObjectWithTransform(canvas, segmentlength, segment.X, segment.Y, segment.ToAngle(), SnakeSegmentDrawer);
-                        //canvas.DrawLine((float) segment.X,(float)  segment.Y, (float)segment.X + 5, (float)segment.Y + 5);
+                        Vector2D segmentStart = snake.body[i - 1]; //last actually first 
+                        Vector2D segmentEnd = snake.body[i]; 
+                        canvas.StrokeColor = colors[playerID % 8];
+                        canvas.StrokeSize = 5;
+                        canvas.DrawLine((float)segmentStart.X, (float)segmentStart.Y, (float)segmentEnd.X, (float)segmentEnd.Y);
 
-
-
-
-                        //displaying name and score
                         string nameScore = $"{snake.name} - {snake.score}";
                         canvas.FontColor = Colors.White;
                         canvas.FontSize = 18;
                         canvas.Font = Font.Default;
-                        canvas.DrawString(nameScore, -20, -10 - segmentlength, 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
+                        canvas.DrawString(nameScore, (float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
 
-                        //explosion
-                        if (snake.died == true)
-                        {
+
+                    }
+           
+                    if (snake.died == true)
+                    {
+                        int i = 1;
+                        while (i <= 100) {
                             canvas.StrokeSize = 10;
-                            canvas.FillColor = Colors.Red;
-                            canvas.DrawEllipse(0, 0, 80, 80);
-
+                            canvas.StrokeColor = Colors.Red;
+                            canvas.DrawEllipse((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 20 + i, 20 + i);
+                            i += 4;
                         }
 
                     }
+
+                    ////DrawObjectWithTransform(canvas, snake,
+                    //// snake.body[0].GetX(), snake.body[0].GetY(), snake.dir.ToAngle(),
+                    //// SnakeSegmentDrawer);
+
+                    foreach (Vector2D segment in snake.body)
+                    {
+                        canvas.DrawCircle((float)segment.X, (float)segment.Y, 5);
+                        //    double length = segment.Length();
+                        //    float x = (int)(segment.X - length);
+                        //    float y = (int)(segment.Y - length);
+                        //    canvas.DrawLine((float)segment.X, (float)segment.Y, (float)segment.X, (float)segment.Y);
+                        //    //canvas.DrawLine((float)segment.X, (float)segment.Y, (float)snake.body.First().GetX(), (float)snake.body.First().GetY());
+
+                        //    //segment.Normalize();
+                        //    canvas.StrokeColor = colors[playerID % 2];
+                        //    //int segmentlength = 10 + (snake.score * 2); // snake score is always 0
+                        //    double angle = segment.ToAngle();
+                        //    //DrawObjectWithTransform(canvas, segmentlength, segment.X, segment.Y, segment.ToAngle(), SnakeSegmentDrawer);
+                        //    //canvas.DrawLine((float) segment.X,(float)  segment.Y, (float)segment.X + 5, (float)segment.Y + 5);
+                    }
+
+
+                    
                 }
 
 
@@ -231,9 +257,14 @@ public class WorldPanel : IDrawable
 
                 // Draw Powerups
                 foreach (var p in theWorld.Powerups.Values)
-                    DrawObjectWithTransform(canvas, p, p.loc.GetX(),
-                        p.loc.GetY(), 0,
-                        PowerupDrawer);
+                {
+                    if (p.died == false)
+                    {
+                        DrawObjectWithTransform(canvas, p, p.loc.GetX(),
+                            p.loc.GetY(), 0,
+                            PowerupDrawer);
+                    }
+                }
             }
         }
     }
@@ -285,17 +316,10 @@ public class WorldPanel : IDrawable
     {
 
         int snakeSegmentLength = Convert.ToInt32(o);
-        canvas.DrawLine(0, 0, 0, -100);
+        canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
 
-        ////exploring timeout -- can be deleted eventually
-        //if (snake.alive == false)
-        //{
-        //    canvas.FontColor = Colors.Black;
-        //    canvas.FontSize = 30;
-        //    canvas.Font = Font.Default;
-        //    canvas.DrawString("false", 0, 0, 380, 100, HorizontalAlignment.Left, VerticalAlignment.Top);
 
-        //}
+        
     }
 
 
