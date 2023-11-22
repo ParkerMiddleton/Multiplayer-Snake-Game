@@ -25,8 +25,14 @@ namespace SnakeGame;
 
 public class WorldPanel : IDrawable
 {
-    private IImage wall;
+    private IImage tile1; 
+    private IImage tile2; 
+    private IImage tile3; 
+    private IImage tile4;
+    private IImage powerup;
     private IImage background;
+
+   private IImage[] tiles; 
 
     /// <summary>
     /// Note: This is super important. 
@@ -104,9 +110,17 @@ public class WorldPanel : IDrawable
 
     private void InitializeDrawing()
     {
-        wall = loadImage("wallsprite.png");
-        background = loadImage("background.png");
+        tile1 = loadImage("neontile2.jpg");
+        tile2 = loadImage("neontile3.jpg");
+        tile3 = loadImage("neontile4.jpg");
+        tile4 = loadImage("neontile5.jpg");
+        powerup = loadImage("neonpowerup.png");
+
+
+
+        background = loadImage("swirlybackground.jpg");
         initializedForDrawing = true;
+        tiles = new IImage[] {tile1, tile2, tile3, tile4};
     }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
@@ -275,9 +289,11 @@ public class WorldPanel : IDrawable
     /// <param name="canvas"></param>
     private void WallDrawer(object o, ICanvas canvas)
     {
+        Wall w = o as Wall;
         float width = 50;
         float height = 50;
-        canvas.DrawImage(wall, -(width / 2), -(height / 2), width, height);
+        
+        canvas.DrawImage(tiles[w.wall % 3], -(width / 2), -(height / 2), width, height);
     }
 
     /// <summary>
@@ -287,30 +303,19 @@ public class WorldPanel : IDrawable
     /// <param name="canvas"></param>
     private void PowerupDrawer(object o, ICanvas canvas)
     {
-        Powerup p = o as Powerup;
-        float width = 10;
-        float outerWidth = 15;
-        canvas.FillColor = Colors.Orange;
-        canvas.FillEllipse(-(outerWidth / 2), -(outerWidth / 2), outerWidth, outerWidth);
-        canvas.FillColor = Colors.Green;
-        canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
+        //Powerup p = o as Powerup;
+        //float width = 10;
+        //float outerWidth = 15;
+        //canvas.FillColor = Colors.Orange;
+        //canvas.FillEllipse(-(outerWidth / 2), -(outerWidth / 2), outerWidth, outerWidth);
+        //canvas.FillColor = Colors.Green;
+        //canvas.FillEllipse(-(width / 2), -(width / 2), width, width);
 
+        float width = 16;
+        float height = 16;
+        canvas.DrawImage(powerup, -(width / 2), -(height / 2), width, height);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="o"></param>
-    /// <param name="canvas"></param>
-    private void SnakeSegmentDrawer(object o, ICanvas canvas)
-    {
-
-        int snakeSegmentLength = Convert.ToInt32(o);
-        canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
-
-
-
-    }
 
 
     /// <summary>

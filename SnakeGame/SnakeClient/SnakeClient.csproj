@@ -52,6 +52,24 @@
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
+	<ItemGroup>
+	  <MauiImage Remove="Resources\Images\neonBackground.jpg" />
+	  <MauiImage Remove="Resources\Images\neonpowerup.png" />
+	  <MauiImage Remove="Resources\Images\NeonTile2.jpg" />
+	  <MauiImage Remove="Resources\Images\NeonTile3.jpg" />
+	  <MauiImage Remove="Resources\Images\NeonTile4.jpg" />
+	  <MauiImage Remove="Resources\Images\NeonTile5.jpg" />
+	  <MauiImage Remove="Resources\Images\swirlybackground.jpg" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Resources\Images\neonBackground.jpg" />
+	  <None Remove="Resources\Images\NeonPowerup.png" />
+	  <None Remove="Resources\Images\NeonTile2.jpg" />
+	  <None Remove="Resources\Images\NeonTile3.jpg" />
+	  <None Remove="Resources\Images\NeonTile4.jpg" />
+	  <None Remove="Resources\Images\NeonTile5.jpg" />
+	  <None Remove="Resources\Images\swirlybackground.jpg" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
@@ -59,6 +77,13 @@
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Images\background.png" />
+	  <EmbeddedResource Include="Resources\Images\neonbackground.jpg" />
+	  <EmbeddedResource Include="Resources\Images\neonpowerup.png" />
+	  <EmbeddedResource Include="Resources\Images\neontile2.jpg" />
+	  <EmbeddedResource Include="Resources\Images\neontile3.jpg" />
+	  <EmbeddedResource Include="Resources\Images\neontile4.jpg" />
+	  <EmbeddedResource Include="Resources\Images\neontile5.jpg" />
+	  <EmbeddedResource Include="Resources\Images\swirlybackground.jpg" />
 	  <EmbeddedResource Include="Resources\Images\wallsprite.png" />
 	</ItemGroup>
 

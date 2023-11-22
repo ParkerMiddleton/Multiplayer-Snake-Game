@@ -9,6 +9,7 @@ namespace SnakeGame
         public Vector2D p1 { get; set; }
         public Vector2D p2 { get; set; }
 
+
         public Wall() {
         
         }
@@ -21,6 +22,8 @@ namespace SnakeGame
             this.p2 = p2;
 
         }
+
+     
 
         
 
