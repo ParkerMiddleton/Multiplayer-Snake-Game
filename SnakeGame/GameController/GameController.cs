@@ -71,6 +71,7 @@ namespace SnakeGame
         public void Connect(string ServerText, string nameText)
         {
             Networking.ConnectToServer(OnConnect, ServerText, 11000);
+            
             playerName = nameText;
         }
 
@@ -138,6 +139,8 @@ namespace SnakeGame
                 // So we need to ignore it if this happens. 
                 if (p[p.Length - 1] != '\n')
                     break;
+
+
                 if (int.TryParse(p, out int numberNotJSON))
                 {
                     if (PlayerID == -1)
@@ -197,10 +200,8 @@ namespace SnakeGame
                 JsonDocument.Parse(data);
                 lock (theWorld)
                 {
-
                     if (data.Contains("snake"))
                     {
-
                         Snake? snake = JsonSerializer.Deserialize<Snake>(data);
                         if (!theWorld.Players.ContainsKey(snake!.snake))
                         {

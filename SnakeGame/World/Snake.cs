@@ -7,7 +7,7 @@ namespace SnakeGame
     {
         public int snake { get; set; }
         public  string name { get; set; }
-        public List<Vector2D> body { get; set; }
+        public List<Vector2D> body { get; set; } 
         public Vector2D dir { get; set; }
         public int score { get; set; }
         public bool died { get; set; }

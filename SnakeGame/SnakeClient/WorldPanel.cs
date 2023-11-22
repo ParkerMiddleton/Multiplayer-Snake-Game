@@ -111,7 +111,7 @@ public class WorldPanel : IDrawable
         //undo previous transition from last frame
         canvas.ResetState();
 
-
+        
 
 
         lock (theWorld)
@@ -121,8 +121,8 @@ public class WorldPanel : IDrawable
             if (playerID != -1 && theWorld.size > 0)
             {
                 Snake currentPlayer = theWorld.Players[playerID];
-                float playerX = (float)currentPlayer.body.First().GetX();
-                float playerY = (float)currentPlayer.body.First().GetY();
+                float playerX = (float)currentPlayer.body.Last().GetX();
+                float playerY = (float)currentPlayer.body.Last().GetY();
 
                 //centereing view on snake
                 float translationX = (-playerX) + (viewSize / 2);
@@ -136,50 +136,36 @@ public class WorldPanel : IDrawable
                 // Draw Snakes
                 foreach (Snake snake in theWorld.Players.Values)
                 {
+
                     foreach (Vector2D segment in snake.body)
                     {
-                        // segment.Normalize();
-
+                        //canvas.DrawCircle((float)segment.X, (float) segment.Y, 5);
                         segment.Normalize();
-
-                        double snakeSegmentLength = segment.Length() + (++snake.score * 10); // preincrement to avoid multiplying by zero
-                                                                                             //  double snakeSegmentLength = 10 + (++snake.score * 10);
-                                                                                             //segment.Normalize();
-
-                        double segmentDirection = segment.ToAngle();
-
-
-                        //if (segmentDirection < 0 && segmentDirection >= -90) // negative y direction
-                        //    segmentDirection = -90;
-                        //else if (segmentDirection < -90 && segmentDirection >= -180) // negative x direction
-                        //    segmentDirection = -180;
-                        //else if (segmentDirection >= 0 && segmentDirection < 90) // positive x direction
-                        //    segmentDirection = 0;
-                        //else if (segmentDirection >= 90 && segmentDirection < 180) // positive Y direction
-
-                        canvas.StrokeSize = 10; // per assignment
-                        canvas.StrokeColor = colors[playerID % 8];
-                        // canvas.StrokeLineCap = LineCap.Round;
+                        canvas.StrokeColor = colors[playerID % 2];
+                        int segmentlength = 10 + (snake.score * 2); // snake score is always 0
+                        double angle = segment.ToAngle();
+                        DrawObjectWithTransform(canvas, segmentlength, segment.X, segment.Y, segment.ToAngle(), SnakeSegmentDrawer);
+                        //canvas.DrawLine((float) segment.X,(float)  segment.Y, (float)segment.X + 5, (float)segment.Y + 5);
 
 
-                        DrawObjectWithTransform(canvas, snakeSegmentLength, segment.X, segment.Y, segmentDirection, SnakeSegmentDrawer);
-                        /*
-                                            ////displaying name and score
-                                            //string nameScore = $"{snake.name} - {snake.score}";
-                                            //canvas.FontColor = Colors.White;
-                                            //canvas.FontSize = 18;
-                                            //canvas.Font = Font.Default;
-                                            //canvas.DrawString(nameScore, -20, -10 - snakeSize, 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
 
-                                            ////explosion
-                                            //if (snake.died == true)
-                                            //{
-                                            //    canvas.StrokeSize = 10;
-                                            //    canvas.FillColor = Colors.Red;
-                                            //    canvas.DrawEllipse(0, 0, 80, 80);
 
-                                            //}
-                        */
+                        //displaying name and score
+                        string nameScore = $"{snake.name} - {snake.score}";
+                        canvas.FontColor = Colors.White;
+                        canvas.FontSize = 18;
+                        canvas.Font = Font.Default;
+                        canvas.DrawString(nameScore, -20, -10 - segmentlength, 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
+
+                        //explosion
+                        if (snake.died == true)
+                        {
+                            canvas.StrokeSize = 10;
+                            canvas.FillColor = Colors.Red;
+                            canvas.DrawEllipse(0, 0, 80, 80);
+
+                        }
+
                     }
                 }
 
@@ -299,7 +285,7 @@ public class WorldPanel : IDrawable
     {
 
         int snakeSegmentLength = Convert.ToInt32(o);
-        canvas.DrawLine(0, 0, 0, -snakeSegmentLength);
+        canvas.DrawLine(0, 0, 0, -100);
 
         ////exploring timeout -- can be deleted eventually
         //if (snake.alive == false)
