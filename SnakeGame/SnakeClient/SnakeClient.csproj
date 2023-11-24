@@ -53,6 +53,7 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 	<ItemGroup>
+	  <MauiImage Remove="Resources\Images\cosmic.png" />
 	  <MauiImage Remove="Resources\Images\neonBackground.jpg" />
 	  <MauiImage Remove="Resources\Images\neonpowerup.png" />
 	  <MauiImage Remove="Resources\Images\NeonTile2.jpg" />
@@ -62,6 +63,7 @@
 	  <MauiImage Remove="Resources\Images\swirlybackground.jpg" />
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Resources\Images\cosmic.png" />
 	  <None Remove="Resources\Images\neonBackground.jpg" />
 	  <None Remove="Resources\Images\NeonPowerup.png" />
 	  <None Remove="Resources\Images\NeonTile2.jpg" />
@@ -77,6 +79,7 @@
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Images\background.png" />
+	  <EmbeddedResource Include="Resources\Images\cosmic.png" />
 	  <EmbeddedResource Include="Resources\Images\neonbackground.jpg" />
 	  <EmbeddedResource Include="Resources\Images\neonpowerup.png" />
 	  <EmbeddedResource Include="Resources\Images\neontile2.jpg" />

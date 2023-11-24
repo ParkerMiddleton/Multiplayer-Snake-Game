@@ -118,7 +118,7 @@ public class WorldPanel : IDrawable
 
 
 
-        background = loadImage("swirlybackground.jpg");
+        background = loadImage("cosmic.png");
         initializedForDrawing = true;
         tiles = new IImage[] {tile1, tile2, tile3, tile4};
     }
@@ -165,8 +165,8 @@ public class WorldPanel : IDrawable
                     {
                         Vector2D segmentStart = snake.body[i - 1]; //last actually first 
                         Vector2D segmentEnd = snake.body[i];
-
-                        Color[] scheme = colorPattern[playerID % 8];
+                        int currentPlayerID = snake.snake;
+                        Color[] scheme = colorPattern[currentPlayerID% 8];
                       
                         canvas.StrokeColor = scheme[0];
                         canvas.StrokeDashPattern = null;
@@ -197,15 +197,17 @@ public class WorldPanel : IDrawable
                     
                     if (snake.died == true)
                     {
-
-                        int i = 1;
-                        while (i <= 100)
-                        {
-                            canvas.StrokeSize = 10;
-                            canvas.StrokeColor = Colors.Red;
-                            canvas.DrawEllipse((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 20 + i, 20 + i);
-                            i += 4;
-                        }
+                        
+                            int i = 1;
+                            while (i <= 100)
+                            {
+                                canvas.StrokeSize = 10;
+                                canvas.StrokeColor = Colors.Red;
+                                canvas.DrawEllipse((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 20 + i, 20 + i);
+                                i += 4;
+                            }
+                       
+                      
                     }
                 }
 
