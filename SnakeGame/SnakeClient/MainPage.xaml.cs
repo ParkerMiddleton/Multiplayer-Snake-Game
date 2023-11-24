@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SnakeGame;
 /*
@@ -197,6 +198,21 @@ public partial class MainPage : ContentPage
         connectButton.IsEnabled = false;
         serverText.IsEnabled = false;
         nameText.IsEnabled = false;
+
+        
+        List<string> nameScores = worldPanel.GetNameScore();
+        first.Text = nameScores[0].ToString();
+        second.Text = nameScores[1].ToString();
+        third.Text = nameScores[2].ToString();
+        fourth.Text = nameScores[3].ToString();
+        fifth.Text = nameScores[4].ToString();
+        sixth.Text = nameScores[5].ToString();
+        seventh.Text = nameScores[6].ToString();
+        eighth.Text = nameScores[7].ToString();
+
+
+
+
     }
 
     /// <summary>
