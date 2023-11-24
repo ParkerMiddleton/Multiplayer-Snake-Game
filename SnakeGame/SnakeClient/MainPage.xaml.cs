@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Security;
 
 namespace SnakeGame;
 /*
@@ -118,7 +119,6 @@ so that you can deserialize and store the information continuously sent after th
 public partial class MainPage : ContentPage
 {
     GameController gameController = new();
-
     World theWorld;
 
     public MainPage()
@@ -190,7 +190,6 @@ public partial class MainPage : ContentPage
             return;
         }
 
-
         //Starts the connection process with the controller.
         string playerName = nameText.Text;
         gameController.Connect(serverText.Text, playerName);
@@ -198,21 +197,6 @@ public partial class MainPage : ContentPage
         connectButton.IsEnabled = false;
         serverText.IsEnabled = false;
         nameText.IsEnabled = false;
-
-        
-        List<string> nameScores = worldPanel.GetNameScore();
-        first.Text = nameScores[0].ToString();
-        second.Text = nameScores[1].ToString();
-        third.Text = nameScores[2].ToString();
-        fourth.Text = nameScores[3].ToString();
-        fifth.Text = nameScores[4].ToString();
-        sixth.Text = nameScores[5].ToString();
-        seventh.Text = nameScores[6].ToString();
-        eighth.Text = nameScores[7].ToString();
-
-
-
-
     }
 
     /// <summary>
@@ -221,8 +205,6 @@ public partial class MainPage : ContentPage
     public void OnFrame()
     {
         Dispatcher.Dispatch(() =>
-        
-        
         graphicsView.Invalidate());
 
         //Always sending the current player and the state of the world to the view to be drawn.

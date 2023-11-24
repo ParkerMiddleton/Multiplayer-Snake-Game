@@ -198,15 +198,8 @@ public class WorldPanel : IDrawable
                     
                     if (snake.died == true | snake.alive == false)
                     {
-
-                        int i = 1;
-                        while (i <= 100)
-                        {
-                            canvas.StrokeSize = 10;
-                            canvas.StrokeColor = Colors.Red;
-                            canvas.DrawEllipse((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY(), 20 + i, 20 + i);
-                            i += 4;
-                        }
+                        canvas.FillColor = Colors.Red;
+                        canvas.FillCircle((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY() - 25, 50);
                     }
                 }
 
@@ -340,25 +333,5 @@ public class WorldPanel : IDrawable
         // "pop" the transform
         canvas.RestoreState();
     }
-    public List<string> GetNameScore()
-    {
-        List<Snake> snakes = theWorld.Players.Values.ToList();
-        for (int i = 0; i < snakes.Count-1; i++)
-        {
-            for (int j = 0; j < snakes.Count - 1 - i; j++)
-            {
-                if (snakes[j].score < snakes[j + 1].score)
-                {
-                    Snake temp = snakes[j];
-                    snakes[j] = snakes[j + 1];
-                    snakes[j + 1] = temp;
-                }
-            }
-        }
-        List<string> nameScore = snakes.Select(snake => $"{snake.name}: {snake.score}").ToList();
-
-        return nameScore;
-    }
-
-
+    
 }

@@ -50,44 +50,7 @@
                               WidthRequest="900" 
                               />
             </Border>
-             <VerticalStackLayout
-                    x:Name="scoreBoard"
-                    HeightRequest="300"
-                    WidthRequest="200">
-            <Label Text="Score Board"
-                   FontSize="Title"
-                   FontAttributes="Bold"
-                   VerticalOptions="Center"/>
-             <Border HeightRequest="300"
-                     WidthRequest="200"
-                     Stroke="Black"
-                    StrokeThickness="10"
-                    StrokeShape="Rectangle"
-                    HorizontalOptions="Center">
-                    <VerticalStackLayout>
-    <Entry
-           x:Name="first"
-           Text=""/>
-    <Entry Text=""
-           x:Name="second"/>
-    <Entry Text=""
-           x:Name="third"/>
-    <Entry Text=""
-           x:Name="fourth"/>
-    <Entry Text=""
-           x:Name="fifth"/>
-    <Entry Text=""
-           x:Name="sixth"/>
-    <Entry Text=""
-           x:Name="seventh"/>
-    <Entry Text=""
-           x:Name="eigth"/>
-</VerticalStackLayout>
-            </Border>
-            </VerticalStackLayout>
          </HorizontalStackLayout>
         </VerticalStackLayout>
-  
     </ScrollView>
-
 </ContentPage>
