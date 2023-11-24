@@ -19,6 +19,7 @@ using Microsoft.Maui.Controls;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Graphics;
+using System.Text;
 //using Microsoft.UI.Xaml.Controls;
 
 namespace SnakeGame;
@@ -195,7 +196,7 @@ public class WorldPanel : IDrawable
                     }
 
                     
-                    if (snake.died == true)
+                    if (snake.died == true | snake.alive == false)
                     {
 
                         int i = 1;
@@ -339,4 +340,25 @@ public class WorldPanel : IDrawable
         // "pop" the transform
         canvas.RestoreState();
     }
+    public List<string> GetNameScore()
+    {
+        List<Snake> snakes = theWorld.Players.Values.ToList();
+        for (int i = 0; i < snakes.Count-1; i++)
+        {
+            for (int j = 0; j < snakes.Count - 1 - i; j++)
+            {
+                if (snakes[j].score < snakes[j + 1].score)
+                {
+                    Snake temp = snakes[j];
+                    snakes[j] = snakes[j + 1];
+                    snakes[j + 1] = temp;
+                }
+            }
+        }
+        List<string> nameScore = snakes.Select(snake => $"{snake.name}: {snake.score}").ToList();
+
+        return nameScore;
+    }
+
+
 }
