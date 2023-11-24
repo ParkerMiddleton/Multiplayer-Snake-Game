@@ -82,7 +82,10 @@ public class Vector2D
         return "(" + X + "," + Y + ")";
     }
 
-    // TODO
+    /// <summary>
+    /// Converts the Vector2D object to a Json string.
+    /// </summary>
+    /// <returns>A string in Json format representing the Vector2D object with X and Y coordinates.</returns>
     public string ToJson()
     {
         return $"{{\"X\":{X},\"Y\":{Y}}}";
