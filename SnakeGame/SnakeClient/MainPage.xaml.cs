@@ -43,8 +43,6 @@ public partial class MainPage : ContentPage
         Dispatcher.Dispatch(() => DisplayAlert("Error", error , "Okay"));
     }
 
-
-
     /// <summary>
     /// Anytime a key is touched, the cursor is focused on whatever is being typed in
     /// </summary>
