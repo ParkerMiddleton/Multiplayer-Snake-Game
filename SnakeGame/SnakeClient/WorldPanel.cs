@@ -7,6 +7,7 @@ using Microsoft.Maui.Graphics.Win2D;
 using Color = Microsoft.Maui.Graphics.Color;
 using System.Reflection;
 using Font = Microsoft.Maui.Graphics.Font;
+using Microsoft.Maui.Graphics;
 
 namespace SnakeGame;
 
@@ -29,6 +30,7 @@ public class WorldPanel : IDrawable
     private IImage powerup;
     private IImage background;
     private IImage logo;
+    private IImage explosion;
     private IImage[] tiles;
 
     /// <summary>
@@ -108,6 +110,7 @@ public class WorldPanel : IDrawable
         powerup = loadImage("neonpowerup.png");
         background = loadImage("cosmic.png");
         logo = loadImage("neonsnakeslogo.png");
+        explosion = loadImage("explosion.gif");
         initializedForDrawing = true;
         tiles = new IImage[] { tile1, tile2, tile3, tile4 };
     }
@@ -125,7 +128,7 @@ public class WorldPanel : IDrawable
 
         //undo previous transition from last frame
         canvas.ResetState();
-      
+
         //Prevents race condition by locking critical selection 
         lock (theWorld)
         {
@@ -148,48 +151,51 @@ public class WorldPanel : IDrawable
                 //Draw Snakes
                 foreach (Snake snake in theWorld.Players.Values)
                 {
-                    // draw individual segment
-                    for (int i = 1; i < snake.body.Count; i++)
+                    //Snake has died
+                    if (snake.died == true || snake.alive == false)
                     {
-
-                        Vector2D segmentStart = snake.body[i - 1]; //last actually first 
-                        Vector2D segmentEnd = snake.body[i];
-                        int currentPlayerID = snake.snake;
-                        Color[] scheme = colorPattern[currentPlayerID % 8];
-
-                        //Primary color
-                        canvas.StrokeColor = scheme[0];
-                        canvas.StrokeDashPattern = null;
-                        canvas.StrokeSize = 10;
-                        canvas.StrokeLineCap = LineCap.Round;
-                        canvas.StrokeLineJoin = LineJoin.Round;
-                        canvas.DrawLine((float)segmentStart.X, (float)segmentStart.Y, (float)segmentEnd.X, (float)segmentEnd.Y);
-
-                        //Secondary color
-                        canvas.StrokeColor = scheme[1];
-                        canvas.StrokeDashPattern = new float[] { 2, 4 };
-                        canvas.DrawLine((float)segmentEnd.X, (float)segmentEnd.Y, (float)segmentStart.X, (float)segmentStart.Y);
-                        //Eyes
-                        canvas.StrokeColor = Colors.Black;
-                        canvas.StrokeSize = 2;
-                        canvas.StrokeDashPattern = new float[] { 0.6f, 2.2f };
-                        canvas.DrawLine((float)segmentEnd.X + 2.5f, (float)segmentEnd.Y + 2.5f, (float)segmentEnd.X - 2.5f, (float)segmentEnd.Y - 2.5f);
-                        //Name and Score
-                        string nameScore = $"{snake.name} - {snake.score}";
-                        canvas.FontColor = Colors.White;
+                        canvas.FillColor = Color.FromArgb("#DCDCDC");
+                        canvas.FillCircle((float)snake.body.Last().X, (float)snake.body.Last().GetY(), 15);
+                        canvas.FontColor = Color.FromArgb("#ff4057");
                         canvas.FontSize = 18;
-                        canvas.Font = Font.Default;
-                        canvas.DrawString(nameScore, (float)snake.body.Last().GetX() - 25, (float)snake.body.Last().GetY(), 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
+                        canvas.DrawString("X", (float)snake.body.Last().X, (float)snake.body.Last().GetY(), HorizontalAlignment.Center);
                     }
-
-
-                    if (snake.died == true | snake.alive == false)
+                    else
                     {
-                        canvas.FillColor = Colors.Red;
-                        canvas.FillCircle((float)snake.body.Last().GetX(), (float)snake.body.Last().GetY() - 25, 50);
+                        // draw individual segment
+                        for (int i = 1; i < snake.body.Count; i++)
+                        {
+                            Vector2D segmentStart = snake.body[i - 1]; //last actually first 
+                            Vector2D segmentEnd = snake.body[i];
+                            int currentPlayerID = snake.snake;
+                            Color[] scheme = colorPattern[currentPlayerID % 8];
+
+                            //Primary color
+                            canvas.StrokeColor = scheme[0];
+                            canvas.StrokeDashPattern = null;
+                            canvas.StrokeSize = 10;
+                            canvas.StrokeLineCap = LineCap.Round;
+                            canvas.StrokeLineJoin = LineJoin.Round;
+                            canvas.DrawLine((float)segmentStart.X, (float)segmentStart.Y, (float)segmentEnd.X, (float)segmentEnd.Y);
+
+                            //Secondary color
+                            canvas.StrokeColor = scheme[1];
+                            canvas.StrokeDashPattern = new float[] { 2, 4 };
+                            canvas.DrawLine((float)segmentEnd.X, (float)segmentEnd.Y, (float)segmentStart.X, (float)segmentStart.Y);
+                            //Eyes
+                            canvas.StrokeColor = Colors.Black;
+                            canvas.StrokeSize = 2;
+                            canvas.StrokeDashPattern = new float[] { 0.6f, 2.2f };
+                            canvas.DrawLine((float)segmentEnd.X + 2.5f, (float)segmentEnd.Y + 2.5f, (float)segmentEnd.X - 2.5f, (float)segmentEnd.Y - 2.5f);
+                            //Name and Score
+                            string nameScore = $"{snake.name} - {snake.score}";
+                            canvas.FontColor = Colors.White;
+                            canvas.FontSize = 18;
+                            canvas.Font = Font.Default;
+                            canvas.DrawString(nameScore, (float)snake.body.Last().GetX() - 25, (float)snake.body.Last().GetY(), 380, 100, HorizontalAlignment.Justified, VerticalAlignment.Top);
+                        }
                     }
                 }
-
 
                 //Draw Walls
                 foreach (var p in theWorld.Walls.Values)
@@ -307,25 +313,5 @@ public class WorldPanel : IDrawable
         drawer(o, canvas);
         canvas.RestoreState();
     }
-
-    {
-        List<Snake> snakes = theWorld.Players.Values.ToList();
-        for (int i = 0; i < snakes.Count-1; i++)
-        {
-            for (int j = 0; j < snakes.Count - 1 - i; j++)
-            {
-                if (snakes[j].score < snakes[j + 1].score)
-                {
-                    Snake temp = snakes[j];
-                    snakes[j] = snakes[j + 1];
-                    snakes[j + 1] = temp;
-                }
-            }
-        }
-        List<string> nameScore = snakes.Select(snake => $"{snake.name}: {snake.score}").ToList();
-
-        return nameScore;
-    }
-
 
 }

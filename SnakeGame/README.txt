@@ -18,8 +18,8 @@ It also includes instructions on how to use the application.
 
 ## Special Feature
 
-A unique feature of this SnakeGame application is its laser theme. Rather than trailing through grass, the snake goes on adventures
-through Laser-Land, eating powerup blobs to grow in size and avoiding neon colored tiles. The snakes are also assigned a
+A unique feature of this SnakeGame application is its laser/neon theme. Rather than trailing through grass, the snake goes on adventures
+through neon terrain, eating powerup blobs to grow in size and avoiding neon colored tiles. The snakes are also assigned a
 random and unique color theme and users can customize their snakes name.
 
 ## General Usage and Help Resources
@@ -54,6 +54,12 @@ Design Decisions:
 -UI Design: A unique laser theme was opted for as our final UI design. The background is full of colorful lasers, the powerups and
 tiles are neon colored, and the snakes colors go hand in hand with this as well.
 The snake was customized to have an eye, and to have an alternating color theme.
+
+-MVC Design: A number of smaller classes were developed to help model game objects. The model classes include snake.cs, wall.cs, powerup.cs
+and world.cs. These classes are essential for parsing incoming JSON from the server, which acts as the model for this project. 
+The controller functions with one class: GameController.cs. This class talks directly to the server using our Networking API.
+The view is encapsulated by several projects but mainly takes advantage of the worldPanel object. This class draws every frame that is 
+recieved by the server. 
 
 Code Resources:
 This Application utilizes .NET 07 and .NET MAUI framework. 

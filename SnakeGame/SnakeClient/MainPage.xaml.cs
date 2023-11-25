@@ -1,5 +1,12 @@
-﻿namespace SnakeGame;
+﻿using Microsoft.Maui.Layouts;
+using Microsoft.UI.Xaml.Documents;
 
+namespace SnakeGame;
+
+/// <summary>
+/// The client side components for our View. 
+/// This class includes functionality on connecting to the game server and talks directly to the controller. 
+/// </summary>
 public partial class MainPage : ContentPage
 {
     GameController gameController = new();
@@ -14,16 +21,32 @@ public partial class MainPage : ContentPage
         worldPanel.SetPlayerID(gameController.GetPlayerID());
     }
 
+    /// <summary>
+    /// Displays any error message then asks if the user wants to reconnect to the server
+    /// </summary>
+    /// <param name="error"></param>
     private void DisplayErrorMessage(string error)
     {
-        Dispatcher.Dispatch(() => DisplayAlert("Error", error, "Okay"));
+        Dispatcher.Dispatch( () =>
+        DisplayAlert("Error", error, "Try Again", "Cancel")
+        );
     }
 
+    /// <summary>
+    /// Anytime a key is touched, the cursor is focused on whatever is being typed in
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     void OnTapped(object sender, EventArgs args)
     {
         keyboardHack.Focus();
     }
 
+    /// <summary>
+    /// Controls for the game 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
     void OnTextChanged(object sender, TextChangedEventArgs args)
     {
         Entry entry = (Entry)sender;
@@ -93,6 +116,7 @@ public partial class MainPage : ContentPage
         worldPanel.SetPlayerID(gameController.GetPlayerID()); 
     }
 
+
     private void ControlsButton_Clicked(object sender, EventArgs e)
     {
         DisplayAlert("Controls",
@@ -106,8 +130,8 @@ public partial class MainPage : ContentPage
     private void AboutButton_Clicked(object sender, EventArgs e)
     {
         DisplayAlert("About",
-      "SnakeGame solution\nArtwork by Jolie Uk and Alex Smith\nGame design by Daniel Kopta and Travis Martin\n" +
-      "Implementation by ...\n" +
+      "SnakeGame solution\nArtwork by Logo.com, OpenGameArt.org.\nGame design by Daniel Kopta and Travis Martin\n" +
+      "Implementation by Abbey Lasater and Parker Middleton\n" +
         "CS 3500 Fall 2022, University of Utah", "OK");
     }
 
