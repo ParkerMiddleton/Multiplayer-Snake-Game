@@ -70,6 +70,16 @@ All of which helped us create a user-friendly interface for the SnakeGame applic
 - Error Handling: When thread issues, circular dependencies, or network connection exceptions are detected a popup is displayed
 explaining the error. 
 
+Known Bugs: 
+-Upon losing connection to the game via server being closed/shut off. The user will get a message about the disconnection and state that 
+the user must press "any key" to be able to reconnect. This is because the enable tags are tied to the keyboard movement methods and connection methods
+the xmal.cs file. We have tried to reset these commands whenever the DisplayErrorMessage method is called via event, however since the thread doesnt have 
+access to the same parameters as the "ConnectClicked" and "OnTextChanged" methods, the compiler throws an error. 
+To contribute to this problem, the dispatcher makes it really hard to use the 4th overload for DisplayAlert(), since the compiler wont allow for 
+any variables to be created in their lambda call. So, taking in a "bool answer" for a DisplayAlert call, doesnt work without disabling the dispatcher. 
+This violates the program requirements of being able to ask the user if they want to reconnect after an issue, it does still work, but only with the 
+workaround described above.
+
 
 
 

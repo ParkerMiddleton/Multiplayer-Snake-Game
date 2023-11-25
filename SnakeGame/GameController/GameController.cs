@@ -35,6 +35,13 @@ public class GameController
     public event GameUpdateHandler? UpdateArrived;
 
     /// <summary>
+    /// For updating the view with current connection status
+    /// </summary>
+    /// <param name="connected"></param>
+    public delegate void ConnectionHandler(bool connected);
+    public event ConnectionHandler? Connected;
+
+    /// <summary>
     /// Starts the process for connecting to the server. 
     /// </summary>
     /// <param name="ServerText">The DNS name of a server, or a server's IP</param>
@@ -53,9 +60,11 @@ public class GameController
     {
         if (state.ErrorOccurred)
         {
-            Error?.Invoke("Error connecting to server");
+            Error?.Invoke("Error connecting to server" +"\nYou are able to attempt a reconnection after this message");
+            Connected?.Invoke(false);
             return;
         }
+        Connected?.Invoke(true);
         theServer = state;
         //Sends player name to start the handshake
         MessageEntered(playerName!);
@@ -73,7 +82,9 @@ public class GameController
         if (state.ErrorOccurred)
         {
             // inform the view
-            Error?.Invoke("Lost connection to server");
+            Connected?.Invoke(false);
+            Error?.Invoke("Lost connection to server" + "\n" +
+            "Press any key after this message to allow reconnection attempts");
             return;
         }
         ProcessMessages(state);

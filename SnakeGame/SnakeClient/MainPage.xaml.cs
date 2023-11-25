@@ -1,7 +1,4 @@
-﻿using Microsoft.Maui.Layouts;
-using Microsoft.UI.Xaml.Documents;
-
-namespace SnakeGame;
+﻿namespace SnakeGame;
 
 /// <summary>
 /// The client side components for our View. 
@@ -10,15 +7,31 @@ namespace SnakeGame;
 public partial class MainPage : ContentPage
 {
     GameController gameController = new();
+    bool connectionStatus;
 
     public MainPage()
     {
+        //Start up 
         InitializeComponent();
         graphicsView.Invalidate();
-        gameController.Error += DisplayErrorMessage; 
-        gameController.UpdateArrived += OnFrame; 
+
+        //Events subscribed to
+        gameController.Error += DisplayErrorMessage;
+        gameController.UpdateArrived += OnFrame;
+        gameController.Connected += UpdateConnectStatus;
+       
+        //Passing information to relevent panels
         worldPanel.SetWorld(gameController.GetWorld());
         worldPanel.SetPlayerID(gameController.GetPlayerID());
+    }
+
+    /// <summary>
+    /// Used to communicate the state of a connection.
+    /// </summary>
+    /// <param name="connected"></param>
+    private void UpdateConnectStatus(bool connected)
+    {
+        connectionStatus = connected;
     }
 
     /// <summary>
@@ -27,10 +40,10 @@ public partial class MainPage : ContentPage
     /// <param name="error"></param>
     private void DisplayErrorMessage(string error)
     {
-        Dispatcher.Dispatch( () =>
-        DisplayAlert("Error", error, "Try Again", "Cancel")
-        );
+        Dispatcher.Dispatch(() => DisplayAlert("Error", error , "Okay"));
     }
+
+
 
     /// <summary>
     /// Anytime a key is touched, the cursor is focused on whatever is being typed in
@@ -69,6 +82,14 @@ public partial class MainPage : ContentPage
         }
         entry.Text = "";
         gameController.SetDirection("none");
+
+
+        if (!connectionStatus)
+        {
+            connectButton.IsEnabled = true;
+            serverText.IsEnabled = true;
+            nameText.IsEnabled = true;
+        }
     }
 
     /// <summary>
@@ -99,9 +120,20 @@ public partial class MainPage : ContentPage
         string playerName = nameText.Text;
         gameController.Connect(serverText.Text, playerName);
         keyboardHack.Focus();
-        connectButton.IsEnabled = false;
-        serverText.IsEnabled = false;
-        nameText.IsEnabled = false;
+
+        if (connectionStatus)
+        {
+            connectButton.IsEnabled = false;
+            serverText.IsEnabled = false;
+            nameText.IsEnabled = false;
+        }
+        else
+        {
+            connectButton.IsEnabled = true;
+            serverText.IsEnabled = true;
+            nameText.IsEnabled = true;
+        }
+
 
     }
 
@@ -113,10 +145,14 @@ public partial class MainPage : ContentPage
         Dispatcher.Dispatch(() => graphicsView.Invalidate());
         //Always sending the current player and the state of the world to the view to be drawn.
         worldPanel.SetWorld(gameController.GetWorld());
-        worldPanel.SetPlayerID(gameController.GetPlayerID()); 
+        worldPanel.SetPlayerID(gameController.GetPlayerID());
     }
 
-
+    /// <summary>
+    /// Displays information about game controls
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void ControlsButton_Clicked(object sender, EventArgs e)
     {
         DisplayAlert("Controls",
@@ -127,6 +163,11 @@ public partial class MainPage : ContentPage
                      "OK");
     }
 
+    /// <summary>
+    /// Displays information about the program
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void AboutButton_Clicked(object sender, EventArgs e)
     {
         DisplayAlert("About",
@@ -135,6 +176,12 @@ public partial class MainPage : ContentPage
         "CS 3500 Fall 2022, University of Utah", "OK");
     }
 
+    /// <summary>
+    /// Makes sure that the focus is always on the controller input so 
+    /// game controls can be used fluently. 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void ContentPage_Focused(object sender, FocusEventArgs e)
     {
         if (!connectButton.IsEnabled)
