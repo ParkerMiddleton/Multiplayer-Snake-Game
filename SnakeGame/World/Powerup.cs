@@ -9,11 +9,6 @@ namespace SnakeGame
         public Vector2D loc { get; set; }
         public bool died { get; set; }
 
-        public Powerup()
-        {
-
-        }
-
         [JsonConstructor]
         public Powerup(int power, Vector2D loc, bool died)
         {

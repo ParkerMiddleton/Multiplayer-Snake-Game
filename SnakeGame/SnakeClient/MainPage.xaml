@@ -17,77 +17,85 @@
         <VerticalStackLayout x:Name="verticalStackLayout"
                              Spacing="10"
                              VerticalOptions="Center"
-                             BackgroundColor="Gray">
-            <HorizontalStackLayout HorizontalOptions="Center">
-                <Label Text="server: " VerticalOptions="Center" />
-                <Entry Text="localhost" x:Name="serverText" />
+                             BackgroundColor="#282634"   >
+            <HorizontalStackLayout HorizontalOptions="Center"
+                                   >
+                <Label Text="Server: " VerticalOptions="Center"
+                       Padding="35,15,35,15"
+                       Margin="10, 10,10,0"
+                       Background="#ff4057"
+                       HorizontalTextAlignment="Center"
+                       TextColor="Black"
+                       FontAttributes="Bold"
+                       />
+                <Entry Text="localhost" x:Name="serverText" 
+                       BackgroundColor="#DCDCDC"
+                       HorizontalTextAlignment="Center"
+                       TextColor="Black"
+                       FontAttributes="Bold"
+                       HeightRequest="50"
+                       Margin="10,10,10,0"
+                       />
 
-                <Label Text="name: " VerticalOptions="Center" />
-                <Entry Text="player" x:Name="nameText" />
+                <Label Text="Name: " VerticalOptions="Center" 
+                       BackgroundColor="#ff4057"
+                       TextColor="Black"
+                       HorizontalTextAlignment="Center"
+                       FontAttributes="Bold"
+                       Padding="35,15,35,15"
+                        Margin="10,10,10,0"/>
+                
+                <Entry Text="" x:Name="nameText"
+                       Placeholder="Player"
+                       HorizontalTextAlignment="Center"
+                       BackgroundColor="#DCDCDC"
+                       TextColor="Black"
+                       HeightRequest="50"
+                       WidthRequest="100"
+                       Margin="10,10,10,0"
+                       />
 
-                <Button Text="connect"
+                <Button Text="Connect"
                         Clicked="ConnectClick"
-                        x:Name="connectButton"/>
+                        x:Name="connectButton"
+                        Margin="10,10,10,-1"
+                        BackgroundColor="#ff4057"
+                        TextColor="GhostWhite"
+                        />
 
-                <Button Text="help"
-                        Clicked="ControlsButton_Clicked"/>
+                <Button Text="Help"
+                        Clicked="ControlsButton_Clicked"
+                        BackgroundColor="#ff4057"
+                        Margin="10,10,10,-1"
+                        TextColor="GhostWhite"/>
 
-                <Button Text="about"
-                        Clicked="AboutButton_Clicked"/>
+                <Button Text="About"
+                        Clicked="AboutButton_Clicked"
+                        BackgroundColor="#ff4057"
+                        Margin="10,10,10,-1"
+                        TextColor="GhostWhite"/>
 
                 <Entry MaxLength="1" IsVisible="true"
-                       TextChanged="OnTextChanged" x:Name="keyboardHack" />
+                       TextChanged="OnTextChanged" x:Name="keyboardHack" 
+                       BackgroundColor="#DCDCDC"
+                       Margin="10,10,10,-1"
+                       TextColor="Black"/>
 
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="Center">
-            <Border Stroke="Brown"
+                <Border Stroke="#ff4057"
                     StrokeThickness="10"
                     StrokeShape="Rectangle"
                     HorizontalOptions="Center">
-                <GraphicsView Drawable="{StaticResource drawable1}"
+                    <GraphicsView Drawable="{StaticResource drawable1}"
                               x:Name="graphicsView"
                               HeightRequest="900"
                               WidthRequest="900" 
                               />
-            </Border>
-             <VerticalStackLayout
-                    x:Name="scoreBoard"
-                    HeightRequest="300"
-                    WidthRequest="200">
-            <Label Text="Score Board"
-                   FontSize="Title"
-                   FontAttributes="Bold"
-                   VerticalOptions="Center"/>
-             <Border HeightRequest="300"
-                     WidthRequest="200"
-                     Stroke="Black"
-                    StrokeThickness="10"
-                    StrokeShape="Rectangle"
-                    HorizontalOptions="Center">
-                    <VerticalStackLayout>
-    <Entry
-           x:Name="first"
-           Text=""/>
-    <Entry Text=""
-           x:Name="second"/>
-    <Entry Text=""
-           x:Name="third"/>
-    <Entry Text=""
-           x:Name="fourth"/>
-    <Entry Text=""
-           x:Name="fifth"/>
-    <Entry Text=""
-           x:Name="sixth"/>
-    <Entry Text=""
-           x:Name="seventh"/>
-    <Entry Text=""
-           x:Name="eigth"/>
-</VerticalStackLayout>
-            </Border>
-            </VerticalStackLayout>
-         </HorizontalStackLayout>
+                </Border>
+            </HorizontalStackLayout>
         </VerticalStackLayout>
-  
+
     </ScrollView>
 
 </ContentPage>

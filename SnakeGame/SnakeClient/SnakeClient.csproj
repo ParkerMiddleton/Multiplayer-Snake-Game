@@ -34,6 +34,12 @@
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
 	  <CreatePackage>false</CreatePackage>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-windows10.0.19041.0|AnyCPU'">
+	  <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-windows10.0.19041.0|AnyCPU'">
+	  <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+	</PropertyGroup>
 	<ItemGroup>
 		<!-- App Icon -->
 		<!-- The below icon is commented because it was causing issues with mac builds as of Nov 14, 2023. Still working on a fix. -->
@@ -56,6 +62,7 @@
 	  <MauiImage Remove="Resources\Images\cosmic.png" />
 	  <MauiImage Remove="Resources\Images\neonBackground.jpg" />
 	  <MauiImage Remove="Resources\Images\neonpowerup.png" />
+	  <MauiImage Remove="Resources\Images\neonsnakeslogo.png" />
 	  <MauiImage Remove="Resources\Images\NeonTile2.jpg" />
 	  <MauiImage Remove="Resources\Images\NeonTile3.jpg" />
 	  <MauiImage Remove="Resources\Images\NeonTile4.jpg" />
@@ -66,6 +73,7 @@
 	  <None Remove="Resources\Images\cosmic.png" />
 	  <None Remove="Resources\Images\neonBackground.jpg" />
 	  <None Remove="Resources\Images\NeonPowerup.png" />
+	  <None Remove="Resources\Images\neonsnakeslogo.png" />
 	  <None Remove="Resources\Images\NeonTile2.jpg" />
 	  <None Remove="Resources\Images\NeonTile3.jpg" />
 	  <None Remove="Resources\Images\NeonTile4.jpg" />
@@ -80,6 +88,7 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Images\background.png" />
 	  <EmbeddedResource Include="Resources\Images\cosmic.png" />
+	  <EmbeddedResource Include="Resources\Images\neonsnakeslogo.png" />
 	  <EmbeddedResource Include="Resources\Images\neonbackground.jpg" />
 	  <EmbeddedResource Include="Resources\Images\neonpowerup.png" />
 	  <EmbeddedResource Include="Resources\Images\neontile2.jpg" />
