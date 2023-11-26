@@ -7,4 +7,20 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Libraries\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Libraries\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="NetworkController">
+      <HintPath>..\GameController\Libraries\NetworkController.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Vector2D\Vector2D.csproj" />
+    <ProjectReference Include="..\World\World.csproj" />
+    <ProjectReference Include="..\GameController\GameController.csproj" />
+  </ItemGroup>
 </Project>
