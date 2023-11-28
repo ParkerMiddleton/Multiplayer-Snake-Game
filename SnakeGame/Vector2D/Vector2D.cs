@@ -109,6 +109,13 @@ public class Vector2D
         return Y;
     }
 
+    //public double velocity(double x, double y)
+    //{
+    //    return 
+    //}
+
+
+
     /// <summary>
     /// Clamp x and y to be within the range -1 .. 1
     /// </summary>
