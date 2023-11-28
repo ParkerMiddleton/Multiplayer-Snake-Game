@@ -218,7 +218,6 @@ public class Server
             theWorld.Players.Add(snake.snake, snake);
         }
     }
-
     /// <summary>
     /// This is a delegate for processing client direction commands. 
     /// 
@@ -248,11 +247,12 @@ public class Server
                 Vector2D dir = new Vector2D(0, 1);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+
                 Vector2D newHead = new(oldX, oldY + segmentLength);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
-
                 theWorld.Players[(int)state.ID].dir = dir;
+
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("left"))
@@ -486,6 +486,7 @@ public class Server
     {
         // does this need to account for dynamic local paths on a any computer? 
         //string relativePath = "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\SnakeGame\\settings.xml";
+
         string relativePath = "settings.xml";
 
         //First method of parsing XML is used here because the data that is parsed are just primitive types. 
