@@ -16,34 +16,42 @@ public class Snake
     /// Getter/Setter method for snake ID.
     /// </summary>
     public int snake { get; set; }
+
     /// <summary>
     /// Getter/Setter method for snake name.
     /// </summary>
     public string name { get; set; }
+
     /// <summary>
     /// Getter/Setter method for location body segments location.
     /// </summary>
     public List<Vector2D> body { get; set; }
+
     /// <summary>
     /// Getter/Setter method for direction body segments location.
     /// </summary>
     public Vector2D dir { get; set; }
+
     /// <summary>
     /// Getter/Setter method for snakes score.
     /// </summary>
     public int score { get; set; }
+
     /// <summary>
     /// Getter/Setter method for whether snake is alive or dead.
     /// </summary>
     public bool died { get; set; }
+
     /// <summary>
     /// Getter/Setter method for whether snake is alive or dead.
     /// </summary>
     public bool alive { get; set; }
+
     /// <summary>
     /// Getter/Setter method for whether snake has disconnected
     /// </summary>
     public bool dc { get; set; }
+
     /// <summary>
     /// Getter/Setter method for whether snake has joined.
     /// </summary>
@@ -73,6 +81,24 @@ public class Snake
         this.alive = alive;
         this.dc = dc;
         this.join = join;
+    }
+
+    /// <summary>
+    /// Used for initial snake construction upon connection to the server. 
+    /// </summary>
+    /// <param name="snake"></param>
+    /// <param name="name"></param>
+    public Snake(int snake, string name)
+    {
+        this.snake = snake;
+        this.name = name;
+        body= new List<Vector2D>(); // this is empty for now, this should be based on an empty location in the world. 
+        dir = new Vector2D();
+        score = 0;
+        died = false;
+        alive = true;
+        dc = false;
+        join = true;  // should this be true? 
     }
 
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace SnakeGame;
 
@@ -8,19 +9,25 @@ namespace SnakeGame;
 /// <Date>November 24th, 2023</Date>
 /// The Walls class represents the Walls in the world.
 /// </summary>
+[DataContract(Name = "Wall", Namespace = "")]
 public class Wall
 {
     /// <summary>
     /// Getter/setter method for wall ID.
     /// </summary>
+    [DataMember(Name = "ID")]
     public int wall { get; set; }
+
     /// <summary>
     /// Getter/setter method for starting point of wall
     /// </summary>
+    [DataMember]
     public Vector2D p1 { get; set; }
+
     /// <summary>
     /// Getter/setter method for end point of wall
     /// </summary>
+    [DataMember]
     public Vector2D p2 { get; set; }
 
     /// <summary>
