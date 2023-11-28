@@ -205,7 +205,7 @@ public class GameController
 
             }
         }
-        catch (Exception ex)
+        catch (JsonException ex)
         {
             Error?.Invoke(ex.Message);
         }

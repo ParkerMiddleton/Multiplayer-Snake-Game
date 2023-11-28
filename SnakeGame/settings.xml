@@ -3,6 +3,8 @@
 	<MSPerFrame>34</MSPerFrame>
 	<RespawnRate>200</RespawnRate>
 	<UniverseSize>2000</UniverseSize>
+	<PowerupCap>50</PowerupCap>
+	<PlayerCap>50</PlayerCap>
 	<Walls>
 		<Wall>
 			<ID>0</ID>

@@ -1,14 +1,8 @@
 ﻿using NetworkUtil;
-using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml;
-using System.Xml.Linq;
 
 
 namespace SnakeGame;
@@ -17,60 +11,69 @@ internal class Server
 {
     private Dictionary<long, SocketState> clients;
     private World theWorld;
-    private Random rand = new();
-
-
 
     public delegate void ServerUpdateHandler(IEnumerable<Snake> snake, IEnumerable<Powerup> powerups, IEnumerable<Wall> walls);
     public event ServerUpdateHandler? ServerUpdate;
 
-    private List<Wall> wallsFromXML;
-
-
-    private long msPerFrame = 24;
-    private int maxPlayers = 50;
-    private int maxPowerups = 50;
-    private int size;
-
+    public long msPerFrame = 0;
+    public int respawnRate = 0;
+    public int size = 0;
+    private int maxPlayers = 0;
+    private int maxPowerups = 0;
     private int PlayerID = 0;
-    private string Name;
-    private int nextPowID = 0;
-    private int nextWallID = 0;
 
+    /// <summary>
+    /// Starts the server, loads xml then continuously outputs frames per second. 
+    /// </summary>
+    /// <param name="args">Arguments</param>
     static void Main(string[] args)
     {
-        Server server = new Server(900);
+        Server server = new Server(0);
+        server.ParseSettingsXMLFile();
         server.StartServer();
 
-
-
-        Console.Read(); // this makes the server close when you enter anything with the keyboard. 
-        // is there a better way to keep the server up? 
+        server.StartFPSCounter();
     }
 
+    /// <summary>
+    /// Constructs a server object
+    /// </summary>
+    /// <param name="s">size of the world</param>
     public Server(int s)
     {
-        ParseSettingsXMLFile();
-        size = s;
-        theWorld = new World(size);
+        theWorld = new World(s);
         clients = new Dictionary<long, SocketState>();
     }
 
-    public void Run()
+    /// <summary>
+    /// Starts the FPS counter and continues the loop on forever. 
+    /// </summary>
+    public void StartFPSCounter()
     {
+        System.Diagnostics.Stopwatch fpsWatch = new System.Diagnostics.Stopwatch();
         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-        watch.Start();
-        Console.Write(watch.ElapsedMilliseconds);
+
         while (true)
         {
-            while (watch.ElapsedMilliseconds < msPerFrame)
-            { /* empty loop body */ }
+            int FPS = 0;
+            fpsWatch.Start();
+            while (fpsWatch.ElapsedMilliseconds < 1000)
+            {
+                watch.Start();
 
-            watch.Restart();
+                // wait until the next frame
+                while (watch.ElapsedMilliseconds < msPerFrame)
+                { //empty here because we're timing the systems counter per Frame
+                }
+                FPS++;
+                watch.Restart();
+                Update();
 
-            Update();
+                //  ServerUpdate?.Invoke(theWorld.Players.Values, theWorld.Powerups.Values);
 
-            ServerUpdate?.Invoke(theWorld.Players.Values, theWorld.Powerups.Values, theWorld.Walls.Values);
+            }
+            Console.WriteLine("FPS: " + FPS);
+            fpsWatch.Restart();
         }
     }
 
@@ -83,8 +86,6 @@ internal class Server
         Console.WriteLine("Server is running");
     }
 
-    // From the TIPS section of PS9 instructions 
-
     /// <summary>
     /// This is a delegate callback passed to the networking class to handle a new client connecting. 
     /// Change the callback for the socketState to a new method that recieves the player's name, then ask for data. 
@@ -92,16 +93,17 @@ internal class Server
     /// <param name="state">Curent state of a client's socket</param>
     private void NewClientConnected(SocketState state)
     {
-        // does the client catch this error? 
         if (state.ErrorOccurred)
-            return; // hence why we dont do anything except close the thread here ? 
+        {
+            RemoveClient(state);
+            return;
+        }
 
         // 1)Change the callback for  the SocketState to a new method that recieves the player's name
         state.OnNetworkAction = RecievePlayerName;
+
         // 2)Ask for Data
         Networking.GetData(state);
-
-        PlayerID++; // each connection to the server means a new snake is added. 
     }
 
     /// <summary>
@@ -120,33 +122,94 @@ internal class Server
     /// <param name="state">Curent state of a client's socket</param>
     private void RecievePlayerName(SocketState state)
     {
-        //TODO 
-        string playerName = state.GetData(); // not sure if this will work? 
+        if (state.ErrorOccurred)
+        {
+            RemoveClient(state);
+            return;
+        }
 
+       // ProcessMessage(state);
+
+        string playerName = state.GetData();
         // 1) Make a new Snake with the given name and unique ID (Recommended using the SocketState'sID). 
-        // made a new constructor for this
-        // is it safe to convert from long to int?
-        Snake snake = new Snake((int)state.ID, playerName);
+        Snake snake = new((int)state.ID, playerName);
+
+        //Display connection status
+        Console.WriteLine("Client (" + state.ID + ") " + playerName + " Connected");
 
         // 2) Change the callback to a method that handles command requests from the client. 
         state.OnNetworkAction = HandleSnakeMovementCommands; // After this is called, all Networking.Send calls from the client will be move commands
 
         // 3) Send the startup info to the client.
-        // send player name, world size, all walls
-
+        SendStartUpJson(state, snake);
 
         // 4) Add the client's socket to a list of all clients.
         lock (clients)
         {
-            // the clients ID is of type long, this is because its a IP Address 
-            clients[state.ID] = state; // this line here makes sure that the client's socket is added to the dictonary
+            clients[state.ID] = state;
         }
 
         // 5) Ask for Data
         Networking.GetData(state);
 
+    }
 
-        throw new NotImplementedException();
+    /// <summary>
+    /// Just removes the newline character
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    private void ProcessMessage(SocketState state)
+    {
+        string totalData = state.GetData();
+
+        string[] parts = Regex.Split(totalData, @"(?<=[\n])");
+
+        // Loop until we have processed all messages.
+        // We may have received more than one.
+        foreach (string p in parts)
+        {
+            // Ignore empty strings added by the regex splitter
+            if (p.Length == 0)
+                continue;
+
+            // The regex splitter will include the last string even if it doesn't end with a '\n',
+            // So we need to ignore it if this happens. 
+            if (p[p.Length - 1] != '\n')
+                break;
+
+            //Console.WriteLine("received message from client " + state.ID + ": \"" + p.Substring(0, p.Length - 1) + "\"");
+
+            // Remove it from the SocketState's growable buffer
+            state.RemoveData(0, p.Length);
+
+        }
+    }
+
+    /// <summary>
+    /// Private Helper function for sending initial connection JSON data to the client
+    /// </summary>
+    /// <param name="state">Client connection</param>
+    /// <param name="snake">Client snake</param>
+    private void SendStartUpJson(SocketState state, Snake snake)
+    {
+        // send player ID, world size, all walls
+        Networking.Send(state.TheSocket, snake.snake + "\n");
+        Console.WriteLine("Snake ID: " + snake.snake);
+        Networking.Send(state.TheSocket, size.ToString() + "\n");
+        Console.WriteLine("World Size: " + size.ToString());
+        lock (theWorld)
+        {
+            Console.WriteLine("All walls sent as JSON strings");
+            foreach (Wall wall in theWorld.Walls.Values)
+            {
+                string AsJSON = JsonSerializer.Serialize(wall);
+
+                Console.Write(AsJSON + "\n");
+                Networking.Send(state.TheSocket, AsJSON + '\n');
+            }
+            theWorld.Players.Add(snake.snake, snake);
+        }
     }
 
     /// <summary>
@@ -160,16 +223,46 @@ internal class Server
     /// <param name="state">Curent state of a client's socket</param>
     private void HandleSnakeMovementCommands(SocketState state)
     {
-        //TODO
-        // 1) Process the command
-        // pseudo code 
+        if (state.ErrorOccurred)
+        {
+            RemoveClient(state);
+            return;
+        }
+
+        lock (theWorld)
+        {
+            // 1) Process the command
+            string movement = state.GetData();
+            Console.WriteLine("This is what movement contains: " + movement);
+            if (movement.Contains("up"))
+            {
+                Console.WriteLine("Im moving up!");
+                Vector2D dir = new Vector2D(0, 1);
+                theWorld.Players[(int)state.ID].dir = dir;
+            }
+            if (movement.Contains("left"))
+            {
+                Console.WriteLine("Im moving left!");
+                Vector2D dir = new Vector2D(-1, 0);
+                theWorld.Players[(int)state.ID].dir = dir;
+            }
+             if (movement.Contains("down"))
+            {
+                Console.WriteLine("Im moving down!");
+                Vector2D dir = new Vector2D(0, -1);
+                theWorld.Players[(int)state.ID].dir = dir;
+            }
+            if (movement.Contains("right"))
+            {
+                Console.WriteLine("Im moving right!");
+                Vector2D dir = new Vector2D(1, 0);
+                theWorld.Players[(int)state.ID].dir = dir;
+            }
+        }
 
         // 2) ask for more data
         Networking.GetData(state);
-
-        throw new NotImplementedException();
     }
-
 
     /// <summary>
     /// This is the method invoked every iteration through the frame loop. 
@@ -177,76 +270,66 @@ internal class Server
     /// </summary>
     private void Update()
     {
-        IEnumerable<int> playersToRemove = theWorld.Players.Values.Where(x => !x.died).Select(x => x.snake);
-        IEnumerable<int> powsToRemove = theWorld.Powerups.Values.Where(x => !x.died).Select(x => x.power);
-        while (theWorld.Players.Count < maxPlayers)
+        lock (theWorld)
         {
-            //Snake snake = new Snake(nextPlayerID++,"nameholder", list, direction, 0, false, true, false, true);
-            //theWorld.Players.Add(snake.snake, snake);
-        }
+            //Check if there is any dead snakes or powerups to remove, then remove them. 
+            IEnumerable<int> IDsOfSnakesToRemove = theWorld.Players.Values.Where(x => x.died).Select(x => x.snake);
+            foreach (int snakeID in IDsOfSnakesToRemove)
+                theWorld.Players.Remove(snakeID);
+            IEnumerable<int> IDsOfPowerupsToRemove = theWorld.Powerups.Values.Where(x => x.died).Select(x => x.power);
+            foreach (var powerups in IDsOfPowerupsToRemove)
+                theWorld.Powerups.Remove(powerups);
 
-        while (theWorld.Powerups.Count < maxPowerups)
-        {
-            Vector2D powerup = new(-3, -2);
-            Powerup p = new Powerup(nextPowID++, powerup, false);
-            theWorld.Powerups.Add(p.power, p);
+            //send snake and powerup data to client 
+            foreach (Snake snake in theWorld.Players.Values)
+            {
+                try
+                {
+                    string JsonSnake = JsonSerializer.Serialize(snake);
+                   // Console.Write(JsonSnake + "\n");
+                    SendToAllClients(JsonSnake);
+
+                }
+                catch (JsonException e)
+                {
+
+                    Console.WriteLine("Error Parsing Snake JSON: " + e);
+                }
+
+            }
+
+            foreach (Powerup powerup in theWorld.Powerups.Values)
+            {
+                try
+                {
+                    string JsonPowerup = JsonSerializer.Serialize(powerup);
+                   // Console.Write(JsonPowerup + "\n");
+                    SendToAllClients(JsonPowerup);
+                }
+                catch (JsonException e)
+                {
+
+                    Console.WriteLine("Error Parsing Powerup JSON: " + e);
+                }
+            }
+
         }
     }
 
-    // this can probably be deleted as RecievePlayerName and HandleSnakeMovementCommands handle both of these 
-    // in a better separation of concerns practice. 
-
-    ////receives player name and then commands as strings -- up, down, left, right
-    ////once a players name is received, sends the player id and size of the world back
-    //private void ReceiveMessage(SocketState state)
-    //{
-    //    if (state.ErrorOccurred)
-    //    {
-    //        RemoveClient(state.ID);
-    //        return;
-    //    }
-
-
-    //    Name = state.GetData(); //receive player name from client
-
-    //    //need to reply with the player ID and the size of the world (hard-coding at 900 for now)
-    //    size = 900;
-    //    SendMessage(state, $"{PlayerID} + \n{size}"); //once this is called, have server send state of world
-    //}
-
-    //commenting out for now -- process movement commands 
-    //private void ProcessMessage(SocketState state)
-    //{
-    //    string totalData = state.GetData();
-    //    string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-
-    //    foreach (string p in parts)
-    //    {
-    //        if (p.Length == 0)
-    //            continue;
-
-    //        if (p[p.Length - 1] != '\n')
-    //            break;
-
-    //        Console.WriteLine("Received message from client " + state.ID + ": \"" + p.Substring(0, p.Length - 1) + "\"");
-
-    //        state.RemoveData(0, p.Length);
-
-    //        HashSet<long> disconnectedClients = new HashSet<long>();
-
-    //        foreach (SocketState client in clients.Values)
-    //        {
-    //            if (client != null && client.ID != state.ID)
-    //            {
-    //                if (!Networking.Send(client.TheSocket!, "Message from client " + state.ID + ": " + p))
-    //                    disconnectedClients.Add(client.ID);
-    //            }
-    //        }
-
-    //        foreach (long id in disconnectedClients)
-    //            RemoveClient(id);
-    //    }
-    //}
+    /// <summary>
+    /// Sends data to every active client in a thread safe way. 
+    /// </summary>
+    /// <param name="data">Some text to be sent</param>
+    private void SendToAllClients(string data)
+    {
+        lock (clients)
+        {
+            foreach (SocketState client in clients.Values)
+            {
+                Networking.Send(client.TheSocket, data + '\n');
+            }
+        }
+    }
 
     private string JsonWorld()
     {
@@ -264,7 +347,7 @@ internal class Server
             var snake = new
             {
                 snake = PlayerID,
-                name = Name,
+                name = "stuart",
                 body = bodyList,
                 dir = direction,
                 score = 0,
@@ -303,21 +386,25 @@ internal class Server
         return JsonSerializer.Serialize(worldState.Select(doc => doc.RootElement));
     }
 
-    private void SendMessage(SocketState s, string message)
+    /// <summary>
+    /// Removes the client (in a thread safe way) from the clients socket dictionary
+    /// </summary>
+    /// <param name="id">SocketState ID</param>
+    private void RemoveClient(SocketState state)
     {
-        byte[] messageBytes = Encoding.UTF8.GetBytes(message);
-        // Begin sending the message
-        Console.WriteLine(message);
-        //s.BeginSend(messageBytes, 0, messageBytes.Length, SocketFlags.None, SendCallback, s);
+        lock (theWorld)
+        {
+            Console.WriteLine("Client (" + state.ID + ")" + theWorld.Players[(int)state.ID].name + " Disconnected");
+            theWorld.Players[(int)state.ID].died = true;
+            theWorld.Players[(int)state.ID].alive = false;
+            theWorld.Players[(int)state.ID].dc = true;
 
-        //have server send state of world in json form
-    }
 
-    private void RemoveClient(long id)
-    {
-        Console.WriteLine("Client " + id + " disconnected");
-        clients.Remove(id);
-
+        }
+        lock (clients)
+        {
+            clients.Remove(state.ID);
+        }
     }
 
     /// <summary>
@@ -327,15 +414,82 @@ internal class Server
     {
         // does this need to account for dynamic local paths on a any computer? 
         string relativePath = "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\SnakeGame\\settings.xml";
-        DataContractSerializer ser;
 
+        //First method of parsing XML is used here because the data that is parsed are just primitive types. 
+
+        // Load the XML document from a file
+        XmlDocument xmlDoc = new XmlDocument();
+        xmlDoc.Load(relativePath);
+
+        // Specify the name of the custom tag
+        string respawnRateTag = "//RespawnRate";
+        string msPerFrameTag = "//MSPerFrame";
+        string universeSizeTag = "//UniverseSize";
+        string powerupCapTag = "//PowerupCap";
+        string playerCapTag = "//PlayerCap";
+
+        // Select the XML node using the tag name
+        XmlNode respawnRateNode = xmlDoc.SelectSingleNode(respawnRateTag)!;
+        XmlNode msPerFrameNode = xmlDoc.SelectSingleNode(msPerFrameTag)!;
+        XmlNode universeSizeNode = xmlDoc.SelectSingleNode(universeSizeTag)!;
+        XmlNode powerupCapNode = xmlDoc.SelectSingleNode(powerupCapTag)!;
+        XmlNode playerCapNode = xmlDoc.SelectSingleNode(playerCapTag)!;
+
+        if (respawnRateNode != null && int.TryParse(respawnRateNode.InnerText, out int respawnRate))
+        {
+            Console.WriteLine($"Parsed Respawn Rate: {respawnRate}");
+            this.respawnRate = respawnRate;
+        }
+        if (msPerFrameNode != null && int.TryParse(msPerFrameNode.InnerText, out int msPerFrame))
+        {
+            Console.WriteLine($"Parsed MSPerFrame: {msPerFrame}");
+            this.msPerFrame = msPerFrame;
+        }
+        if (universeSizeNode != null && int.TryParse(universeSizeNode.InnerText, out int universeSize))
+        {
+            Console.WriteLine($"Parsed UniverseSize: {universeSize}");
+            size = universeSize;
+        }
+        if (powerupCapNode != null && int.TryParse(powerupCapNode.InnerText, out int powerupCap))
+        {
+            Console.WriteLine($"Parsed PowerupCap: {powerupCap}");
+            maxPowerups = powerupCap;
+        }
+        if (playerCapNode != null && int.TryParse(playerCapNode.InnerText, out int playerCap))
+        {
+            Console.WriteLine($"Parsed PlayerCap: {playerCap}");
+            maxPlayers = playerCap;
+        }
+
+
+        //Parsing walls from file 
+        //Different method here because Walls are custom objects
+        DataContractSerializer wallSer = new DataContractSerializer(typeof(Wall));
         FileStream fs = new FileStream(relativePath, FileMode.Open);
         XmlDictionaryReader reader =
         XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas());
         while (reader.Read())
         {
+            switch (reader.NodeType)
+            {
+                case XmlNodeType.Element:
+                    if (wallSer.IsStartObject(reader))
+                    {
+                        //  Console.WriteLine("Found the element");
+                        Wall p = (Wall)wallSer.ReadObject(reader)!;
+                        //  Console.WriteLine("{0} {1}    id:{2}",
+                        //      p.p1, p.p2, p.wall);
 
-            
+                        lock (theWorld)
+                        {
+                            theWorld.Walls.Add(p.wall, p);
+                        }
+
+                    }
+                    break;
+            }
         }
     }
 }
+
+

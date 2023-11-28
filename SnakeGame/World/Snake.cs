@@ -83,6 +83,7 @@ public class Snake
         this.join = join;
     }
 
+
     /// <summary>
     /// Used for initial snake construction upon connection to the server. 
     /// </summary>
@@ -92,7 +93,7 @@ public class Snake
     {
         this.snake = snake;
         this.name = name;
-        body= new List<Vector2D>(); // this is empty for now, this should be based on an empty location in the world. 
+        body = new List<Vector2D> { new Vector2D(1, 1), new Vector2D(1, 0) }; // this is empty for now, this should be based on an empty location in the world. 
         dir = new Vector2D();
         score = 0;
         died = false;
