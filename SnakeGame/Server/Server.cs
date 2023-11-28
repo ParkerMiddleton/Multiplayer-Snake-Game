@@ -7,8 +7,10 @@ using System.Xml;
 
 namespace SnakeGame;
 
-internal class Server
+public class Server
 {
+
+
     private Dictionary<long, SocketState> clients;
     private World theWorld;
 
@@ -74,7 +76,6 @@ internal class Server
                 FPS++;
                 watch.Restart();
                 Update();
-
                 //  ServerUpdate?.Invoke(theWorld.Players.Values, theWorld.Powerups.Values);
 
             }
@@ -134,7 +135,7 @@ internal class Server
             return;
         }
 
-       // ProcessMessage(state);
+        // ProcessMessage(state);
 
         string playerName = state.GetData().Trim();
         // 1) Make a new Snake with the given name and unique ID (Recommended using the SocketState'sID). 
@@ -235,6 +236,7 @@ internal class Server
             return;
         }
 
+
         lock (theWorld)
         {
             // 1) Process the command
@@ -265,7 +267,7 @@ internal class Server
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
-             else if (movement.Contains("down"))
+             if (movement.Contains("down"))
             {
                 Console.WriteLine("Im moving down!");
                 Vector2D dir = new Vector2D(0, -1);
@@ -354,7 +356,7 @@ internal class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                   // Console.Write(JsonSnake + "\n");
+                    // Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
 
                 }
@@ -371,7 +373,7 @@ internal class Server
                 try
                 {
                     string JsonPowerup = JsonSerializer.Serialize(powerup);
-                   // Console.Write(JsonPowerup + "\n");
+                    // Console.Write(JsonPowerup + "\n");
                     SendToAllClients(JsonPowerup);
                 }
                 catch (JsonException e)
@@ -562,5 +564,8 @@ internal class Server
         }
     }
 }
+
+
+
 
 
