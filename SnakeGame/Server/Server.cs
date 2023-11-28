@@ -17,6 +17,11 @@ public class Server
     public delegate void ServerUpdateHandler(IEnumerable<Snake> snake, IEnumerable<Powerup> powerups, IEnumerable<Wall> walls);
     public event ServerUpdateHandler? ServerUpdate;
 
+    //trial
+
+    double segmentLength = 3;
+  
+
     public long msPerFrame = 0;
     public int respawnRate = 0;
     public int size = 0;
@@ -67,7 +72,7 @@ public class Server
                 while (watch.ElapsedMilliseconds < msPerFrame)
                 { //empty here because we're timing the systems counter per Frame
                 }
-
+                moveSnake();
                 FPS++;
                 watch.Restart();
                 Update();
@@ -132,7 +137,7 @@ public class Server
 
         // ProcessMessage(state);
 
-        string playerName = state.GetData();
+        string playerName = state.GetData().Trim();
         // 1) Make a new Snake with the given name and unique ID (Recommended using the SocketState'sID). 
         Snake snake = new((int)state.ID, playerName);
 
@@ -241,30 +246,92 @@ public class Server
             {
                 Console.WriteLine("Im moving up!");
                 Vector2D dir = new Vector2D(0, 1);
+                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                Vector2D newHead = new(oldX, oldY + segmentLength);
+                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
+                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+
                 theWorld.Players[(int)state.ID].dir = dir;
+                state.RemoveData(0, movement.Length);
             }
-            if (movement.Contains("left"))
+            else if (movement.Contains("left"))
             {
                 Console.WriteLine("Im moving left!");
                 Vector2D dir = new Vector2D(-1, 0);
+                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                Vector2D newHead = new(oldX - segmentLength, oldY);
+                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
+                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
                 theWorld.Players[(int)state.ID].dir = dir;
+                state.RemoveData(0, movement.Length);
             }
-            if (movement.Contains("down"))
+             if (movement.Contains("down"))
             {
                 Console.WriteLine("Im moving down!");
                 Vector2D dir = new Vector2D(0, -1);
+                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                Vector2D newHead = new(oldX, oldY - segmentLength);
+                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
+                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
                 theWorld.Players[(int)state.ID].dir = dir;
+                state.RemoveData(0, movement.Length);
             }
-            if (movement.Contains("right"))
+            else if (movement.Contains("right"))
             {
                 Console.WriteLine("Im moving right!");
                 Vector2D dir = new Vector2D(1, 0);
+                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                Vector2D newHead = new(oldX + segmentLength, oldY);
+                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
+                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+
                 theWorld.Players[(int)state.ID].dir = dir;
+                state.RemoveData(0, movement.Length);
             }
         }
 
         // 2) ask for more data
         Networking.GetData(state);
+    }
+
+    private void moveSnake()
+    {
+        Vector2D up = new Vector2D(0, 1);
+        Vector2D down = new Vector2D(0, -1);
+        Vector2D left = new Vector2D(-1, 0);
+        Vector2D right = new Vector2D(1, 0);
+
+        foreach (Snake snake in theWorld.Players.Values)
+        {
+            if (snake.dir == up)
+            {
+                Vector2D velocityUp = new Vector2D(0, 6);
+                for (int i = 0; i < snake.body.Count; i++)
+                    snake.body[i] = snake.body[i] + velocityUp;
+            }
+            else if (snake.dir == down)
+            {
+                Vector2D velocityDown = new Vector2D(0, -6);
+                for (int i = 0; i < snake.body.Count; i++)
+                    snake.body[i] = snake.body[i] + velocityDown;
+            }
+            else if (snake.dir == left)
+            {
+                Vector2D velocityLeft = new Vector2D(-6, 0);
+                for (int i = 0; i < snake.body.Count; i++)
+                    snake.body[i] = snake.body[i] + velocityLeft;
+            }
+            else if (snake.dir == right)
+            {
+                Vector2D velocityRight = new Vector2D(6, 0);
+                for (int i = 0; i < snake.body.Count; i++)
+                    snake.body[i] = snake.body[i] + velocityRight;
+            }
+        }
     }
 
     /// <summary>
@@ -337,8 +404,8 @@ public class Server
     private string JsonWorld()
     {
         //Snakes, powerups, and walls to JSON -- i hardcoded values just testing things out.
-        Vector2D direction = new(-1, 0);
-        Vector2D head = new(3, 1);
+        Vector2D direction = new(0, 1);
+        Vector2D head = new(1, 4);
         Vector2D tail = new(1, 1);
         List<Vector2D> bodyList = new();
         bodyList.Add(tail);
@@ -389,6 +456,8 @@ public class Server
         return JsonSerializer.Serialize(worldState.Select(doc => doc.RootElement));
     }
 
+    
+
     /// <summary>
     /// Removes the client (in a thread safe way) from the clients socket dictionary
     /// </summary>
@@ -416,7 +485,8 @@ public class Server
     private void ParseSettingsXMLFile()
     {
         // does this need to account for dynamic local paths on a any computer? 
-        string relativePath = "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\SnakeGame\\settings.xml";
+        //string relativePath = "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\SnakeGame\\settings.xml";
+        string relativePath = "settings.xml";
 
         //First method of parsing XML is used here because the data that is parsed are just primitive types. 
 
