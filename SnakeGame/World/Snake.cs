@@ -28,7 +28,7 @@ public class Snake
     public List<Vector2D> body { get; set; }
 
     /// <summary>
-    /// Getter/Setter method for direction body segments location.
+    /// Direction of the head of the snake.
     /// </summary>
     public Vector2D dir { get; set; }
 
@@ -93,7 +93,7 @@ public class Snake
     {
         this.snake = snake;
         this.name = name;
-        body = new List<Vector2D> { new Vector2D(1, 1), new Vector2D(1, 0) }; // this is empty for now, this should be based on an empty location in the world. 
+        body = new List<Vector2D> { new Vector2D(1, 0), new Vector2D(1, 120) }; // this is empty for now, this should be based on an empty location in the world. 
         dir = new Vector2D();
         score = 0;
         died = false;
@@ -101,5 +101,7 @@ public class Snake
         dc = false;
         join = true;  // should this be true? 
     }
+
+  
 
 }

@@ -1,4 +1,5 @@
-﻿using NetworkUtil;
+﻿using Microsoft.VisualBasic;
+using NetworkUtil;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -9,25 +10,32 @@ namespace SnakeGame;
 
 public class Server
 {
-
-
+    // always lock before modifying or iterating through any of these
     private Dictionary<long, SocketState> clients;
     private World theWorld;
 
-    public delegate void ServerUpdateHandler(IEnumerable<Snake> snake, IEnumerable<Powerup> powerups, IEnumerable<Wall> walls);
-    public event ServerUpdateHandler? ServerUpdate;
+    // Setting values treated as constants
+    private long MS_Per_Frame = 0;
+    private int Respawn_Rate = 0;
+    private double Snake_Speed = 6;
+    private int World_Size = 0;
+    private int Max_Players = 0;
+    private int Max_Powerups = 0;
+    private int Powerup_Respawn_Delay = 0;
+    private int Snake_Starting_Length = 0;
+    private int Snake_Growth_Rate = 0;
 
-    //trial
 
-    double segmentLength = 3;
-  
 
-    public long msPerFrame = 0;
-    public int respawnRate = 0;
-    public int size = 0;
-    private int maxPlayers = 0;
-    private int maxPowerups = 0;
-    private int PlayerID = 0;
+    //Basic Movement Vectors
+    private Vector2D up = new Vector2D(0, -1);
+    private Vector2D down = new Vector2D(0, 1);
+    private Vector2D left = new Vector2D(-1, 0);
+    private Vector2D right = new Vector2D(1, 0);
+
+
+
+
 
     /// <summary>
     /// Starts the server, loads xml then continuously outputs frames per second. 
@@ -52,37 +60,9 @@ public class Server
         clients = new Dictionary<long, SocketState>();
     }
 
-    /// <summary>
-    /// Starts the FPS counter and continues the loop on forever. 
-    /// </summary>
-    public void StartFPSCounter()
-    {
-        System.Diagnostics.Stopwatch fpsWatch = new System.Diagnostics.Stopwatch();
-        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-
-        while (true)
-        {
-            int FPS = 0;
-            fpsWatch.Start();
-            while (fpsWatch.ElapsedMilliseconds < 1000)
-            {
-                watch.Start();
-
-                // wait until the next frame
-                while (watch.ElapsedMilliseconds < msPerFrame)
-                { //empty here because we're timing the systems counter per Frame
-                }
-                moveSnake();
-                FPS++;
-                watch.Restart();
-                Update();
-                //  ServerUpdate?.Invoke(theWorld.Players.Values, theWorld.Powerups.Values);
-
-            }
-            Console.WriteLine("FPS: " + FPS);
-            fpsWatch.Restart();
-        }
-    }
+    /////////////////////////////////////////////////////////////////////////////////
+    ///// SERVER TO CLIENT METHODS 
+    ///////////////////////////////////////////////////////////////////////////////
 
     /// <summary>
     /// Starts the server and beginins listening for new TCP connections
@@ -158,38 +138,41 @@ public class Server
 
         // 5) Ask for Data
         Networking.GetData(state);
-
     }
 
     /// <summary>
-    /// Just removes the newline character
-    /// 
+    /// Sends data to every active client in a thread safe way. 
     /// </summary>
-    /// <param name="message"></param>
-    private void ProcessMessage(SocketState state)
+    /// <param name="data">Some text to be sent</param>
+    private void SendToAllClients(string data)
     {
-        string totalData = state.GetData();
-
-        string[] parts = Regex.Split(totalData, @"(?<=[\n])");
-
-        // Loop until we have processed all messages.
-        // We may have received more than one.
-        foreach (string p in parts)
+        lock (clients)
         {
-            // Ignore empty strings added by the regex splitter
-            if (p.Length == 0)
-                continue;
+            foreach (SocketState client in clients.Values)
+            {
+                Networking.Send(client.TheSocket, data + '\n');
+            }
+        }
+    }
 
-            // The regex splitter will include the last string even if it doesn't end with a '\n',
-            // So we need to ignore it if this happens. 
-            if (p[p.Length - 1] != '\n')
-                break;
+    /// <summary>
+    /// Removes the client (in a thread safe way) from the clients socket dictionary
+    /// </summary>
+    /// <param name="id">SocketState ID</param>
+    private void RemoveClient(SocketState state)
+    {
+        lock (theWorld)
+        {
+            Console.WriteLine("Client (" + state.ID + ")" + theWorld.Players[(int)state.ID].name + " Disconnected");
+            theWorld.Players[(int)state.ID].died = true;
+            theWorld.Players[(int)state.ID].alive = false;
+            theWorld.Players[(int)state.ID].dc = true;
 
-            //Console.WriteLine("received message from client " + state.ID + ": \"" + p.Substring(0, p.Length - 1) + "\"");
 
-            // Remove it from the SocketState's growable buffer
-            state.RemoveData(0, p.Length);
-
+        }
+        lock (clients)
+        {
+            clients.Remove(state.ID);
         }
     }
 
@@ -203,8 +186,8 @@ public class Server
         // send player ID, world size, all walls
         Networking.Send(state.TheSocket, snake.snake + "\n");
         Console.WriteLine("Snake ID: " + snake.snake);
-        Networking.Send(state.TheSocket, size.ToString() + "\n");
-        Console.WriteLine("World Size: " + size.ToString());
+        Networking.Send(state.TheSocket, World_Size.ToString() + "\n");
+        Console.WriteLine("World Size: " + World_Size.ToString());
         lock (theWorld)
         {
             Console.WriteLine("All walls sent as JSON strings");
@@ -240,55 +223,46 @@ public class Server
         {
             // 1) Process the command
             string movement = state.GetData();
-            Console.WriteLine("This is what movement contains: " + movement);
+
             if (movement.Contains("up"))
             {
-                Console.WriteLine("Im moving up!");
-                Vector2D dir = new Vector2D(0, 1);
+                Vector2D dir = new Vector2D(0, -1);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-
-                Vector2D newHead = new(oldX, oldY + segmentLength);
-                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+                Vector2D newHead = new(oldX, oldY);
+                theWorld.Players[(int)state.ID].body.Add(newHead);
                 theWorld.Players[(int)state.ID].dir = dir;
 
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("left"))
             {
-                Console.WriteLine("Im moving left!");
                 Vector2D dir = new Vector2D(-1, 0);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX - segmentLength, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
+                Vector2D newHead = new(oldX, oldY);
+
+                theWorld.Players[(int)state.ID].body.Add(newHead);
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
-             if (movement.Contains("down"))
+            else if (movement.Contains("down"))
             {
-                Console.WriteLine("Im moving down!");
-                Vector2D dir = new Vector2D(0, -1);
+                Vector2D dir = new Vector2D(0, 1);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY - segmentLength);
-                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+                Vector2D newHead = new(oldX, oldY);
+                theWorld.Players[(int)state.ID].body.Add(newHead);
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("right"))
             {
-                Console.WriteLine("Im moving right!");
                 Vector2D dir = new Vector2D(1, 0);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX + segmentLength, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
-
+                Vector2D newHead = new(oldX, oldY);
+                theWorld.Players[(int)state.ID].body.Add(newHead);
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
@@ -298,38 +272,98 @@ public class Server
         Networking.GetData(state);
     }
 
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    /// UPDATE AND WORLD STATE METHODS
+    ////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /// <summary>
+    /// Starts the FPS counter and continues the loop on forever. 
+    /// </summary>
+    public void StartFPSCounter()
+    {
+        System.Diagnostics.Stopwatch fpsWatch = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+
+        while (true)
+        {
+            int FPS = 0;
+            fpsWatch.Start();
+            while (fpsWatch.ElapsedMilliseconds < 1000)
+            {
+                watch.Start();
+                // wait until the next frame
+                while (watch.ElapsedMilliseconds < MS_Per_Frame)
+                { //empty here because we're timing the systems counter per Frame
+                }
+                FPS++;
+                watch.Restart();
+                Update();
+                moveSnake();
+            }
+            Console.WriteLine("FPS: " + FPS);
+            fpsWatch.Restart();
+        }
+    }
+
+    /* im starting to think that this method should just 
+     * make sure that the head of the snake stays moving in 
+     * whatever direction it currently has
+     * 
+     * this method should aslo keep track of when the tail has reached the next node in the list 
+     * and should stop before hitting the head of the snake. 
+     * 
+     * 
+     * From instructions 
+     * 
+     * Snakes have a head and a tail vertex with an infinite number of vertices in between 
+     * Every consecutive pair of verticies makes up one segment of the snake.
+     * By default, a snake consists of two verticies: The tail and the head (only when there is no turns or bends)
+     * 
+     * When a snake changes direction, a new vertex is added going in that direction and the head is updated to be that new vertex
+     * 
+     * The rest of the snake's body follows along the path that the segments in front of it previously followed. 
+     * 
+     * When the tail catches up to the next vertex, it is removed. 
+     * 
+     * 
+     */
+
     private void moveSnake()
     {
-        Vector2D up = new Vector2D(0, 1);
-        Vector2D down = new Vector2D(0, -1);
-        Vector2D left = new Vector2D(-1, 0);
-        Vector2D right = new Vector2D(1, 0);
-
-        foreach (Snake snake in theWorld.Players.Values)
+        lock (theWorld)
         {
-            if (snake.dir == up)
+            foreach (Snake snake in theWorld.Players.Values)
             {
-                Vector2D velocityUp = new Vector2D(0, 6);
-                for (int i = 0; i < snake.body.Count; i++)
-                    snake.body[i] = snake.body[i] + velocityUp;
-            }
-            else if (snake.dir == down)
-            {
-                Vector2D velocityDown = new Vector2D(0, -6);
-                for (int i = 0; i < snake.body.Count; i++)
-                    snake.body[i] = snake.body[i] + velocityDown;
-            }
-            else if (snake.dir == left)
-            {
-                Vector2D velocityLeft = new Vector2D(-6, 0);
-                for (int i = 0; i < snake.body.Count; i++)
-                    snake.body[i] = snake.body[i] + velocityLeft;
-            }
-            else if (snake.dir == right)
-            {
-                Vector2D velocityRight = new Vector2D(6, 0);
-                for (int i = 0; i < snake.body.Count; i++)
-                    snake.body[i] = snake.body[i] + velocityRight;
+                if (snake.dir.Equals(up))
+                {
+                    Vector2D velocityUp = new Vector2D(0, -Snake_Speed);
+                    for (int i = 0; i < snake.body.Count; i++)
+                        snake.body[i] = snake.body[i] + velocityUp;
+
+                }
+                else if (snake.dir.Equals(down))
+                {
+                    Vector2D velocityDown = new Vector2D(0, Snake_Speed);
+                    // AddVectorToSnakeHead(velocityDown, snake);
+                    for (int i = 0; i < snake.body.Count; i++)
+                        snake.body[i] = snake.body[i] + velocityDown;
+                }
+                else if (snake.dir.Equals(left))
+                {
+                    Vector2D velocityLeft = new Vector2D(-Snake_Speed, 0);
+                    //AddVectorToSnakeHead(velocityLeft, snake);
+                    for (int i = 0; i < snake.body.Count; i++)
+                        snake.body[i] = snake.body[i] + velocityLeft;
+                }
+                else if (snake.dir.Equals(right))
+                {
+                    Vector2D velocityRight = new Vector2D(Snake_Speed, 0);
+                    //AddVectorToSnakeHead(velocityRight, snake);
+                    for (int i = 0; i < snake.body.Count; i++)
+                        snake.body[i] = snake.body[i] + velocityRight;
+                }
             }
         }
     }
@@ -356,8 +390,9 @@ public class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                    // Console.Write(JsonSnake + "\n");
+                    Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
+                    Console.WriteLine(theWorld.Players.Count);
 
                 }
                 catch (JsonException e)
@@ -378,7 +413,6 @@ public class Server
                 }
                 catch (JsonException e)
                 {
-
                     Console.WriteLine("Error Parsing Powerup JSON: " + e);
                 }
             }
@@ -387,110 +421,13 @@ public class Server
     }
 
     /// <summary>
-    /// Sends data to every active client in a thread safe way. 
-    /// </summary>
-    /// <param name="data">Some text to be sent</param>
-    private void SendToAllClients(string data)
-    {
-        lock (clients)
-        {
-            foreach (SocketState client in clients.Values)
-            {
-                Networking.Send(client.TheSocket, data + '\n');
-            }
-        }
-    }
-
-    private string JsonWorld()
-    {
-        //Snakes, powerups, and walls to JSON -- i hardcoded values just testing things out.
-        Vector2D direction = new(0, 1);
-        Vector2D head = new(1, 4);
-        Vector2D tail = new(1, 1);
-        List<Vector2D> bodyList = new();
-        bodyList.Add(tail);
-        bodyList.Add(head);
-
-        List<JsonDocument> worldState = new List<JsonDocument>();
-        foreach (var player in theWorld.Players.Values)
-        {
-            var snake = new
-            {
-                snake = PlayerID,
-                name = "stuart",
-                body = bodyList,
-                dir = direction,
-                score = 0,
-                died = false,
-                alive = true,
-                dc = false,
-                join = true
-            };
-            worldState.Add(JsonDocument.Parse(JsonSerializer.Serialize(snake)));
-        }
-        foreach (var wall in theWorld.Walls.Values)
-        {
-            Vector2D start = new(10, 0);
-            Vector2D finish = new(10, 2);
-
-            var walls = new
-            {
-                wall = 1,
-                p1 = start,
-                p2 = finish
-            };
-            worldState.Add(JsonDocument.Parse(JsonSerializer.Serialize(walls)));
-        }
-        foreach (var powerup in theWorld.Powerups.Values)
-        {
-            Vector2D poweruppoint = new(5, 0);
-
-            var powerups = new
-            {
-                power = 1,
-                loc = poweruppoint,
-                died = false
-            };
-            worldState.Add(JsonDocument.Parse(JsonSerializer.Serialize(powerups)));
-        }
-        return JsonSerializer.Serialize(worldState.Select(doc => doc.RootElement));
-    }
-
-    
-
-    /// <summary>
-    /// Removes the client (in a thread safe way) from the clients socket dictionary
-    /// </summary>
-    /// <param name="id">SocketState ID</param>
-    private void RemoveClient(SocketState state)
-    {
-        lock (theWorld)
-        {
-            Console.WriteLine("Client (" + state.ID + ")" + theWorld.Players[(int)state.ID].name + " Disconnected");
-            theWorld.Players[(int)state.ID].died = true;
-            theWorld.Players[(int)state.ID].alive = false;
-            theWorld.Players[(int)state.ID].dc = true;
-
-
-        }
-        lock (clients)
-        {
-            clients.Remove(state.ID);
-        }
-    }
-
-    /// <summary>
     /// Parses XML file and gets settings for the server.
     /// </summary>
     private void ParseSettingsXMLFile()
     {
-        // does this need to account for dynamic local paths on a any computer? 
-        //string relativePath = "C:\\Users\\parke\\source\\repos\\game-bytebuddies_game\\SnakeGame\\settings.xml";
-
         string relativePath = "settings.xml";
 
         //First method of parsing XML is used here because the data that is parsed are just primitive types. 
-
         // Load the XML document from a file
         XmlDocument xmlDoc = new XmlDocument();
         xmlDoc.Load(relativePath);
@@ -501,6 +438,10 @@ public class Server
         string universeSizeTag = "//UniverseSize";
         string powerupCapTag = "//PowerupCap";
         string playerCapTag = "//PlayerCap";
+        string snakeSpeedTag = "//SnakeSpeed";
+        string snakeStartingLengthTag = "//SnakeStartingLength";
+        string snakeGrowthRateTag = "//SnakeGrowthRate";
+        string powerupRespawnDelayTag = "//PowerupRespawnDelay";
 
         // Select the XML node using the tag name
         XmlNode respawnRateNode = xmlDoc.SelectSingleNode(respawnRateTag)!;
@@ -508,31 +449,56 @@ public class Server
         XmlNode universeSizeNode = xmlDoc.SelectSingleNode(universeSizeTag)!;
         XmlNode powerupCapNode = xmlDoc.SelectSingleNode(powerupCapTag)!;
         XmlNode playerCapNode = xmlDoc.SelectSingleNode(playerCapTag)!;
+        XmlNode snakeSpeedNode = xmlDoc.SelectSingleNode(snakeSpeedTag)!;
+        XmlNode snakeStartingLengthNode = xmlDoc.SelectSingleNode(snakeStartingLengthTag)!;
+        XmlNode snakeGrowthRateNode = xmlDoc.SelectSingleNode(snakeGrowthRateTag)!;
+        XmlNode powerupRespawnDelayNode = xmlDoc.SelectSingleNode(powerupRespawnDelayTag)!;
+
 
         if (respawnRateNode != null && int.TryParse(respawnRateNode.InnerText, out int respawnRate))
         {
             Console.WriteLine($"Parsed Respawn Rate: {respawnRate}");
-            this.respawnRate = respawnRate;
+            this.Respawn_Rate = respawnRate;
         }
         if (msPerFrameNode != null && int.TryParse(msPerFrameNode.InnerText, out int msPerFrame))
         {
             Console.WriteLine($"Parsed MSPerFrame: {msPerFrame}");
-            this.msPerFrame = msPerFrame;
+            this.MS_Per_Frame = msPerFrame;
         }
         if (universeSizeNode != null && int.TryParse(universeSizeNode.InnerText, out int universeSize))
         {
             Console.WriteLine($"Parsed UniverseSize: {universeSize}");
-            size = universeSize;
+            World_Size = universeSize;
         }
         if (powerupCapNode != null && int.TryParse(powerupCapNode.InnerText, out int powerupCap))
         {
             Console.WriteLine($"Parsed PowerupCap: {powerupCap}");
-            maxPowerups = powerupCap;
+            Max_Powerups = powerupCap;
         }
         if (playerCapNode != null && int.TryParse(playerCapNode.InnerText, out int playerCap))
         {
             Console.WriteLine($"Parsed PlayerCap: {playerCap}");
-            maxPlayers = playerCap;
+            Max_Players = playerCap;
+        }
+        if (snakeSpeedNode != null && int.TryParse(snakeSpeedNode.InnerText, out int snakeSpeed))
+        {
+            Console.WriteLine($"Parsed Snake Speed: {snakeSpeed}");
+            Snake_Speed = snakeSpeed;
+        }
+        if (snakeStartingLengthNode != null && int.TryParse(snakeStartingLengthNode.InnerText, out int snakeStartingLength))
+        {
+            Console.WriteLine($"Parsed Snake Starting Length: {snakeStartingLength}");
+            Snake_Starting_Length = snakeStartingLength;
+        }
+        if (snakeGrowthRateNode != null && int.TryParse(snakeGrowthRateNode.InnerText, out int snakeGrowthRate))
+        {
+            Console.WriteLine($"Parsed Snake Growth Rate: {snakeGrowthRate}");
+            Snake_Growth_Rate = snakeGrowthRate;
+        }
+        if (powerupRespawnDelayNode != null && int.TryParse(powerupRespawnDelayNode.InnerText, out int powerupRespawnDelay))
+        {
+            Console.WriteLine($"Parsed Powerup Respawn Delay: {powerupRespawnDelay}");
+            Powerup_Respawn_Delay = powerupRespawnDelay;
         }
 
 
@@ -549,11 +515,7 @@ public class Server
                 case XmlNodeType.Element:
                     if (wallSer.IsStartObject(reader))
                     {
-                        //  Console.WriteLine("Found the element");
                         Wall p = (Wall)wallSer.ReadObject(reader)!;
-                        //  Console.WriteLine("{0} {1}    id:{2}",
-                        //      p.p1, p.p2, p.wall);
-
                         lock (theWorld)
                         {
                             theWorld.Walls.Add(p.wall, p);
@@ -563,6 +525,18 @@ public class Server
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Adds two vectors together then replaces the head with its sum
+    /// </summary>
+    /// <param name="v">Incoming vector</param>
+    private void AddVectorToSnakeHead(Vector2D v, Snake s)
+    {
+        Vector2D head = s.body.Last();
+        Vector2D vectorSum = head + v; // this works bc opperators are overloaded
+
+        s.body.Prepend(vectorSum);
     }
 }
 

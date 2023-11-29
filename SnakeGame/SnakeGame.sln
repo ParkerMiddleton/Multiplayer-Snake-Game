@@ -14,7 +14,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2C4E831-D57E-4114-9321-8DE4365C6ED6}"
 	ProjectSection(SolutionItems) = preProject
 		README.txt = README.txt
-		settings.xml = settings.xml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Server\Server.csproj", "{3AB33D31-2B73-4B72-9898-E429802C4FD4}"
