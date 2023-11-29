@@ -73,6 +73,7 @@ public class Server
                 { //empty here because we're timing the systems counter per Frame
                 }
                 moveSnake();
+                Collision();
                 FPS++;
                 watch.Restart();
                 Update();
@@ -338,6 +339,89 @@ public class Server
         
     }
 
+    private void Collision() //doesnt work
+    {
+        foreach (Snake snake in theWorld.Players.Values)
+        {
+
+            foreach (var p in theWorld.Walls.Values)
+            {
+                // if wall layer is drawn in the x direction
+                if (p.p1.GetX() == p.p2.GetX())
+                {
+                    double distance = Math.Abs((p.p2.GetY() - p.p1.GetY()));
+                    int numberOfWalls = (int)(distance / 50);
+
+                    double pointY = p.p1.GetY();
+                    if (p.p1.GetY() < p.p2.GetY())
+                    {
+                        for (int i = 0; i <= numberOfWalls; i++)
+                        {
+                            pointY += 50;
+                            Vector2D newPoint = new(p.p1.GetX(), pointY);
+                            if (snake.body.Last().Equals(newPoint))
+                            {
+                                snake.alive = false;
+                                snake.died = true;
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i <= numberOfWalls; i++)
+                        {
+                            pointY -= 50;
+                            Vector2D newPoint = new(p.p1.GetX(), pointY);
+                            if (snake.body.Last().Equals(newPoint))
+                            {
+                                snake.alive = false;
+                                snake.died = true;
+                            }
+                        }
+                    }
+
+                }
+
+                // if wall layer drawn in the Y direction 
+                if (p.p1.GetY() == p.p2.GetY())
+                {
+                    double distance = Math.Abs((p.p2.GetX() - p.p1.GetX()));
+                    int numberOfWalls = (int)(distance / 50);
+
+                    double pointX = p.p1.GetX();
+                    if (p.p1.GetX() < p.p2.GetX())
+                    {
+                        for (int i = 0; i <= numberOfWalls; i++)
+                        {
+                            pointX += 50;
+                            Vector2D newPoint = new(pointX, p.p1.GetY());
+                            if (snake.body.Last().Equals(newPoint))
+                            {
+                                snake.alive = false;
+                                snake.died = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i <= numberOfWalls; i++)
+                        {
+                            pointX -= 50;
+                            Vector2D newPoint = new(pointX, p.p1.GetY());
+                            if (snake.body.Last().Equals(newPoint))
+                            {
+                                snake.alive = false;
+                                snake.died = true;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// This is the method invoked every iteration through the frame loop. 
     /// Update the world then send it to each client
@@ -360,7 +444,7 @@ public class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                    Console.Write(JsonSnake + "\n");
+                    //Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
 
                 }
@@ -377,7 +461,7 @@ public class Server
                 try
                 {
                     string JsonPowerup = JsonSerializer.Serialize(powerup);
-                    // Console.Write(JsonPowerup + "\n");
+                    //Console.Write(JsonPowerup + "\n");
                     SendToAllClients(JsonPowerup);
                 }
                 catch (JsonException e)
