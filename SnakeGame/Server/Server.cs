@@ -249,8 +249,10 @@ public class Server
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
                 Vector2D newHead = new(oldX, oldY + segmentLength);
+                Vector2D newHead = new(oldX, oldY - segmentLength);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+               // theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
 
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
@@ -264,6 +266,7 @@ public class Server
                 Vector2D newHead = new(oldX - segmentLength, oldY);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
+             //   theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
@@ -274,8 +277,10 @@ public class Server
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
                 Vector2D newHead = new(oldX, oldY - segmentLength);
+                Vector2D newHead = new(oldX, oldY + segmentLength);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+              //  theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
@@ -287,7 +292,7 @@ public class Server
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
                 Vector2D newHead = new(oldX + segmentLength, oldY);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+               // theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
 
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
@@ -332,6 +337,37 @@ public class Server
                     snake.body[i] = snake.body[i] + velocityRight;
             }
         }
+        //foreach (Snake snake in theWorld.Players.Values)
+        //{
+        //    Vector2D velocityUp = new Vector2D(0, -6);
+        //    for (int i = 0; i < snake.body.Count; i++)
+        //        snake.body[i] = snake.body[i] + velocityUp;
+
+            //if (snake.dir == up)
+            //{
+            //    Vector2D velocityUp = new Vector2D(0, 6);
+            //    for (int i = 0; i < snake.body.Count; i++)
+            //        snake.body[i] = snake.body[i] + velocityUp;
+            //}
+            //else if (snake.dir == down)
+            //{
+            //    Vector2D velocityDown = new Vector2D(0, -6);
+            //    for (int i = 0; i < snake.body.Count; i++)
+            //        snake.body[i] = snake.body[i] + velocityDown;
+            //}
+            //else if (snake.dir == left)
+            //{
+            //    Vector2D velocityLeft = new Vector2D(-6, 0);
+            //    for (int i = 0; i < snake.body.Count; i++)
+            //        snake.body[i] = snake.body[i] + velocityLeft;
+            //}
+            //else if (snake.dir == right)
+            //{
+            //    Vector2D velocityRight = new Vector2D(6, 0);
+            //    for (int i = 0; i < snake.body.Count; i++)
+            //        snake.body[i] = snake.body[i] + velocityRight;
+            //}
+        //}
     }
 
     /// <summary>
