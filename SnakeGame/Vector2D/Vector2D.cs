@@ -23,7 +23,7 @@ public class Vector2D
     /// </summary>
     public Vector2D()
     {
-        X = -1;
+        X = 0;
         Y = -1;
     }
 

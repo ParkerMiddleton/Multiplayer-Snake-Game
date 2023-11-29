@@ -248,10 +248,8 @@ public class Server
                 Vector2D dir = new Vector2D(0, 1);
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY + segmentLength);
                 Vector2D newHead = new(oldX, oldY - segmentLength);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
                // theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
 
                 theWorld.Players[(int)state.ID].dir = dir;
@@ -266,7 +264,6 @@ public class Server
                 Vector2D newHead = new(oldX - segmentLength, oldY);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
-             //   theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tail
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
@@ -277,10 +274,8 @@ public class Server
                 double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
                 Vector2D newHead = new(oldX, oldY - segmentLength);
-                Vector2D newHead = new(oldX, oldY + segmentLength);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
                 theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
-              //  theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
             }
@@ -292,7 +287,7 @@ public class Server
                 double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
                 Vector2D newHead = new(oldX + segmentLength, oldY);
                 theWorld.Players[(int)state.ID].body.Add(newHead); //append a head
-               // theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
+                theWorld.Players[(int)state.ID].body.Remove(theWorld.Players[(int)state.ID].body.First()); //remove tai
 
                 theWorld.Players[(int)state.ID].dir = dir;
                 state.RemoveData(0, movement.Length);
@@ -305,69 +300,42 @@ public class Server
 
     private void moveSnake()
     {
-        Vector2D up = new Vector2D(0, 1);
-        Vector2D down = new Vector2D(0, -1);
+       
+        Vector2D up = new Vector2D(0, -1);
+        Vector2D down = new Vector2D(0, 1);
         Vector2D left = new Vector2D(-1, 0);
         Vector2D right = new Vector2D(1, 0);
 
         foreach (Snake snake in theWorld.Players.Values)
         {
-            if (snake.dir == up)
+            Console.Write(snake.dir);
+            if (snake.dir.Equals(up))
             {
                 Vector2D velocityUp = new Vector2D(0, 6);
                 for (int i = 0; i < snake.body.Count; i++)
                     snake.body[i] = snake.body[i] + velocityUp;
             }
-            else if (snake.dir == down)
+            else if (snake.dir.Equals(down))
             {
+                Console.Write("down direction");
                 Vector2D velocityDown = new Vector2D(0, -6);
                 for (int i = 0; i < snake.body.Count; i++)
                     snake.body[i] = snake.body[i] + velocityDown;
             }
-            else if (snake.dir == left)
+            else if (snake.dir.Equals(left))
             {
                 Vector2D velocityLeft = new Vector2D(-6, 0);
                 for (int i = 0; i < snake.body.Count; i++)
                     snake.body[i] = snake.body[i] + velocityLeft;
             }
-            else if (snake.dir == right)
+            else if (snake.dir.Equals(right))
             {
                 Vector2D velocityRight = new Vector2D(6, 0);
                 for (int i = 0; i < snake.body.Count; i++)
                     snake.body[i] = snake.body[i] + velocityRight;
             }
         }
-        //foreach (Snake snake in theWorld.Players.Values)
-        //{
-        //    Vector2D velocityUp = new Vector2D(0, -6);
-        //    for (int i = 0; i < snake.body.Count; i++)
-        //        snake.body[i] = snake.body[i] + velocityUp;
-
-            //if (snake.dir == up)
-            //{
-            //    Vector2D velocityUp = new Vector2D(0, 6);
-            //    for (int i = 0; i < snake.body.Count; i++)
-            //        snake.body[i] = snake.body[i] + velocityUp;
-            //}
-            //else if (snake.dir == down)
-            //{
-            //    Vector2D velocityDown = new Vector2D(0, -6);
-            //    for (int i = 0; i < snake.body.Count; i++)
-            //        snake.body[i] = snake.body[i] + velocityDown;
-            //}
-            //else if (snake.dir == left)
-            //{
-            //    Vector2D velocityLeft = new Vector2D(-6, 0);
-            //    for (int i = 0; i < snake.body.Count; i++)
-            //        snake.body[i] = snake.body[i] + velocityLeft;
-            //}
-            //else if (snake.dir == right)
-            //{
-            //    Vector2D velocityRight = new Vector2D(6, 0);
-            //    for (int i = 0; i < snake.body.Count; i++)
-            //        snake.body[i] = snake.body[i] + velocityRight;
-            //}
-        //}
+        
     }
 
     /// <summary>
@@ -392,7 +360,7 @@ public class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                    // Console.Write(JsonSnake + "\n");
+                    Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
 
                 }
