@@ -23,6 +23,7 @@ public class Vector2D
     /// </summary>
     public Vector2D()
     {
+        // Always starts direction up 
         X = 0;
         Y = -1;
     }

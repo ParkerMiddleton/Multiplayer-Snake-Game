@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.ComponentModel;
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -57,6 +58,8 @@ public class Snake
     /// </summary>
     public bool join { get; set; }
 
+    private Vector2D previousDir;
+
     /// <summary>
     /// Parameterized Json constructor for Snake Class -- used for Json deserialization.
     /// </summary>
@@ -81,6 +84,7 @@ public class Snake
         this.alive = alive;
         this.dc = dc;
         this.join = join;
+        previousDir = new Vector2D(0, 0); 
     }
 
 
@@ -94,14 +98,13 @@ public class Snake
         this.snake = snake;
         this.name = name;
         body = new List<Vector2D> { new Vector2D(1, 0), new Vector2D(1, 120) }; // this is empty for now, this should be based on an empty location in the world. 
-        dir = new Vector2D();
+        dir = new Vector2D(0,1);
         score = 0;
         died = false;
         alive = true;
         dc = false;
         join = true;  // should this be true? 
+        previousDir =  new Vector2D();
     }
-
-  
 
 }
