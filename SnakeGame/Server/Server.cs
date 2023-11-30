@@ -34,13 +34,8 @@ public class Server
     private Vector2D DOWN = new Vector2D(0, 1);
     private Vector2D LEFT = new Vector2D(-1, 0);
     private Vector2D RIGHT = new Vector2D(1, 0);
-    double segmentLength = 3;
-    private Random rand;
-    private double size;
     private Dictionary<Snake, int> scoreKeeper;
-  
 
-    private Vector2D EpsiVector = new Vector2D(double.Epsilon, double.Epsilon);
 
 
 
@@ -64,7 +59,6 @@ public class Server
     /// <param name="s">size of the world</param>
     public Server(int s)
     {
-        size = s; //i added this but not sure if this is correct
         theWorld = new World(s);
         clients = new Dictionary<long, SocketState>();
     }
@@ -72,7 +66,6 @@ public class Server
     /////////////////////////////////////////////////////////////////////////////////
     ///// SERVER TO CLIENT METHODS 
     ///////////////////////////////////////////////////////////////////////////////
-
 
     /// <summary>
     /// Starts the server and beginins listening for new TCP connections
@@ -235,38 +228,58 @@ public class Server
             string movement = state.GetData();
             if (movement.Contains("up"))
             {
-                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
-                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead);
-                theWorld.Players[(int)state.ID].dir = UP;
+                if (!theWorld.Players[(int)state.ID].dir.Equals(UP)
+                    && !theWorld.Players[(int)state.ID].dir.Equals(DOWN))
+                {
+                    double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                    double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                    Vector2D newHead = new(oldX, oldY);
+                    theWorld.Players[(int)state.ID].body.Add(newHead);
+                    theWorld.Players[(int)state.ID].dir = UP;
+                    
+                }
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("left"))
             {
-                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
-                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead);
-                theWorld.Players[(int)state.ID].dir = LEFT;
+                if (!theWorld.Players[(int)state.ID].dir.Equals(LEFT)
+                   && !theWorld.Players[(int)state.ID].dir.Equals(RIGHT))
+                {
+                    double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                    double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                    Vector2D newHead = new(oldX, oldY);
+                    theWorld.Players[(int)state.ID].body.Add(newHead);
+                    theWorld.Players[(int)state.ID].dir = LEFT;
+                  
+                }
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("down"))
             {
-                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
-                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead);
-                theWorld.Players[(int)state.ID].dir = DOWN;
+                if (!theWorld.Players[(int)state.ID].dir.Equals(DOWN)
+                   && !theWorld.Players[(int)state.ID].dir.Equals(UP))
+                {
+                    double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                    double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                    Vector2D newHead = new(oldX, oldY);
+                    theWorld.Players[(int)state.ID].body.Add(newHead);
+                    theWorld.Players[(int)state.ID].dir = DOWN;
+                  
+                }
                 state.RemoveData(0, movement.Length);
             }
             else if (movement.Contains("right"))
             {
-                double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
-                double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
-                Vector2D newHead = new(oldX, oldY);
-                theWorld.Players[(int)state.ID].body.Add(newHead);
-                theWorld.Players[(int)state.ID].dir = RIGHT;
+                if (!theWorld.Players[(int)state.ID].dir.Equals(RIGHT)
+                 && !theWorld.Players[(int)state.ID].dir.Equals(LEFT))
+                {
+                    double oldX = theWorld.Players[(int)state.ID].body.Last().GetX();
+                    double oldY = theWorld.Players[(int)state.ID].body.Last().GetY();
+                    Vector2D newHead = new(oldX, oldY);
+                    theWorld.Players[(int)state.ID].body.Add(newHead);
+                    theWorld.Players[(int)state.ID].dir = RIGHT;
+                   
+                }
                 state.RemoveData(0, movement.Length);
             }
         }
@@ -304,27 +317,17 @@ public class Server
                 watch.Restart();
                 Update();
                 moveSnake();
+                Collision();
             }
             Console.WriteLine("FPS: " + FPS);
             fpsWatch.Restart();
         }
     }
 
-    /* 
-     * From instructions 
-     * 
-     * Snakes have a head and a tail vertex with an infinite number of vertices in between 
-     * Every consecutive pair of verticies makes up one segment of the snake.
-     * By default, a snake consists of two verticies: The tail and the head (only when there is no turns or bends)
-     * 
-     * When a snake changes direction, a new vertex is added going in that direction and the head is updated to be that new vertex
-     * 
-     * The rest of the snake's body follows along the path that the segments in front of it previously followed. 
-     * 
-     * When the tail catches up to the next vertex, it is removed. 
-     * 
-     * 
-     */
+    /// <summary>
+    /// Keeps the snake's head moving and keeps the tail following the second to last snake segment
+    /// provided that the snakes length is not 2 segments long
+    /// </summary>
     private void moveSnake()
     {
         lock (theWorld)
@@ -338,7 +341,7 @@ public class Server
                 if (snake.dir.Equals(UP))
                 {
                     velocityVector = new Vector2D(0, -Snake_Speed);
-                    snake.body[snake.body.Count-1] += velocityVector;
+                    snake.body[snake.body.Count - 1] += velocityVector;
                 }
                 else if (snake.dir.Equals(DOWN))
                 {
@@ -358,7 +361,7 @@ public class Server
 
                 //move the tail vertext by its velocity
                 //The tail's velocity is towards the next vertex in the body with a speed equal to the snake's speed
-               
+
                 // if there is only two segments in the list, their velocites are the same, therefore no action necessary 
                 if (snake.body.Count > 2)
                 {
@@ -367,7 +370,7 @@ public class Server
 
                     // if the snake tail and the segment before it have the same position then remove the tail 
                     if (snake.body[0].Equals(snake.body[1]))
-                    { 
+                    {
                         snake.body.RemoveAt(0);
                     }
                 }
@@ -405,41 +408,44 @@ public class Server
         return new Vector2D();
     }
 
-    private void Collision() 
+    private void Collision()
     {
-        foreach (Snake snake in theWorld.Players.Values)
+        lock (theWorld)
         {
-            foreach (Wall wall in theWorld.Walls.Values)
+            foreach (Snake snake in theWorld.Players.Values)
             {
-                Vector2D head = snake.body.Last();
-                double wallStartX = wall.p1.GetX() - 25;
-                double wallEndX = wall.p2.GetX() + 25;
-                double wallStartY = wall.p1.GetY() - 25;
-                double wallEndY = wall.p2.GetY() + 25;
-                if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
-                head.GetY() >= wallStartY && head.GetY() <= wallEndY)
+                foreach (Wall wall in theWorld.Walls.Values)
                 {
-                    snake.died = true;
-                    snake.alive = false;
+                    Vector2D head = snake.body.Last();
+                    double wallStartX = wall.p1.GetX() - 25;
+                    double wallEndX = wall.p2.GetX() + 25;
+                    double wallStartY = wall.p1.GetY() - 25;
+                    double wallEndY = wall.p2.GetY() + 25;
+                    if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
+                    head.GetY() >= wallStartY && head.GetY() <= wallEndY)
+                    {
+                        snake.died = true;
+                        snake.alive = false;
+                    }
                 }
             }
-        } 
+        }
     }
 
 
     private void Respawn() //need to add logic that checks if objects are in way
     {
-        foreach(Snake snake in theWorld.Players.Values)
+        foreach (Snake snake in theWorld.Players.Values)
         {
-            if(snake.died == true)
+            if (snake.died == true)
             {
                 //need to randomize snakes new location
                 snake.score = 0; //set score back to zero
-                int adjustedSize = (int)size - 50;
+                int adjustedSize = Snake_Starting_Length - 50;
 
                 //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 //Vector2D newTail = new(rand.Next(-800, 800), rand.Next(-800, 800));
-                Vector2D newHead = new(1,1); //hard coded for now because random is not working for some reason
+                Vector2D newHead = new(1, 1); //hard coded for now because random is not working for some reason
                 Vector2D newTail = new(1, 4);
 
                 List<Vector2D> newBody = new List<Vector2D> { newTail, newHead };
@@ -452,16 +458,16 @@ public class Server
 
     private void powerUps()
     {
-       
+
 
     }
 
     private void keepScore()
     {
-        foreach(Snake snake in theWorld.Players.Values)
-        { 
+        foreach (Snake snake in theWorld.Players.Values)
+        {
             scoreKeeper.Add(snake, snake.score);
-            if(snake.dc == true)
+            if (snake.dc == true)
             {
                 scoreKeeper.Remove(snake);
             }
@@ -469,11 +475,11 @@ public class Server
     }
 
 
-/// <summary>
-/// This is the method invoked every iteration through the frame loop. 
-/// Update the world then send it to each client
-/// </summary>
-private void Update()
+    /// <summary>
+    /// This is the method invoked every iteration through the frame loop. 
+    /// Update the world then send it to each client
+    /// </summary>
+    private void Update()
     {
         lock (theWorld)
         {
@@ -491,7 +497,7 @@ private void Update()
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                    
+
                     Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
 
