@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using NetworkUtil;
 using System.Reflection;
+using System.Drawing;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -33,6 +34,11 @@ public class Server
     private Vector2D DOWN = new Vector2D(0, 1);
     private Vector2D LEFT = new Vector2D(-1, 0);
     private Vector2D RIGHT = new Vector2D(1, 0);
+    double segmentLength = 3;
+    private Random rand;
+    private double size;
+    private Dictionary<Snake, int> scoreKeeper;
+  
 
     private Vector2D EpsiVector = new Vector2D(double.Epsilon, double.Epsilon);
 
@@ -58,6 +64,7 @@ public class Server
     /// <param name="s">size of the world</param>
     public Server(int s)
     {
+        size = s; //i added this but not sure if this is correct
         theWorld = new World(s);
         clients = new Dictionary<long, SocketState>();
     }
@@ -398,94 +405,75 @@ public class Server
         return new Vector2D();
     }
 
-    private void Collision() //doesnt work
+    private void Collision() 
     {
         foreach (Snake snake in theWorld.Players.Values)
         {
-
-            foreach (var p in theWorld.Walls.Values)
+            foreach (Wall wall in theWorld.Walls.Values)
             {
-                // if wall layer is drawn in the x direction
-                if (p.p1.GetX() == p.p2.GetX())
+                Vector2D head = snake.body.Last();
+                double wallStartX = wall.p1.GetX() - 25;
+                double wallEndX = wall.p2.GetX() + 25;
+                double wallStartY = wall.p1.GetY() - 25;
+                double wallEndY = wall.p2.GetY() + 25;
+                if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
+                head.GetY() >= wallStartY && head.GetY() <= wallEndY)
                 {
-                    double distance = Math.Abs((p.p2.GetY() - p.p1.GetY()));
-                    int numberOfWalls = (int)(distance / 50);
-
-                    double pointY = p.p1.GetY();
-                    if (p.p1.GetY() < p.p2.GetY())
-                    {
-                        for (int i = 0; i <= numberOfWalls; i++)
-                        {
-                            pointY += 50;
-                            Vector2D newPoint = new(p.p1.GetX(), pointY);
-                            if (snake.body.Last().Equals(newPoint))
-                            {
-                                snake.alive = false;
-                                snake.died = true;
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= numberOfWalls; i++)
-                        {
-                            pointY -= 50;
-                            Vector2D newPoint = new(p.p1.GetX(), pointY);
-                            if (snake.body.Last().Equals(newPoint))
-                            {
-                                snake.alive = false;
-                                snake.died = true;
-                            }
-                        }
-                    }
-
+                    snake.died = true;
+                    snake.alive = false;
                 }
+            }
+        } 
+    }
 
-                // if wall layer drawn in the Y direction 
-                if (p.p1.GetY() == p.p2.GetY())
-                {
-                    double distance = Math.Abs((p.p2.GetX() - p.p1.GetX()));
-                    int numberOfWalls = (int)(distance / 50);
 
-                    double pointX = p.p1.GetX();
-                    if (p.p1.GetX() < p.p2.GetX())
-                    {
-                        for (int i = 0; i <= numberOfWalls; i++)
-                        {
-                            pointX += 50;
-                            Vector2D newPoint = new(pointX, p.p1.GetY());
-                            if (snake.body.Last().Equals(newPoint))
-                            {
-                                snake.alive = false;
-                                snake.died = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= numberOfWalls; i++)
-                        {
-                            pointX -= 50;
-                            Vector2D newPoint = new(pointX, p.p1.GetY());
-                            if (snake.body.Last().Equals(newPoint))
-                            {
-                                snake.alive = false;
-                                snake.died = true;
-                            }
-                        }
-                    }
+    private void Respawn() //need to add logic that checks if objects are in way
+    {
+        foreach(Snake snake in theWorld.Players.Values)
+        {
+            if(snake.died == true)
+            {
+                //need to randomize snakes new location
+                snake.score = 0; //set score back to zero
+                int adjustedSize = (int)size - 50;
 
-                }
+                //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
+                //Vector2D newTail = new(rand.Next(-800, 800), rand.Next(-800, 800));
+                Vector2D newHead = new(1,1); //hard coded for now because random is not working for some reason
+                Vector2D newTail = new(1, 4);
+
+                List<Vector2D> newBody = new List<Vector2D> { newTail, newHead };
+                snake.body = newBody;
+                snake.alive = true;
+                snake.died = false;
             }
         }
     }
 
-    /// <summary>
-    /// This is the method invoked every iteration through the frame loop. 
-    /// Update the world then send it to each client
-    /// </summary>
-    private void Update()
+    private void powerUps()
+    {
+       
+
+    }
+
+    private void keepScore()
+    {
+        foreach(Snake snake in theWorld.Players.Values)
+        { 
+            scoreKeeper.Add(snake, snake.score);
+            if(snake.dc == true)
+            {
+                scoreKeeper.Remove(snake);
+            }
+        }
+    }
+
+
+/// <summary>
+/// This is the method invoked every iteration through the frame loop. 
+/// Update the world then send it to each client
+/// </summary>
+private void Update()
     {
         lock (theWorld)
         {
