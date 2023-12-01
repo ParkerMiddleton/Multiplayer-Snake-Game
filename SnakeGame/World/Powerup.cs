@@ -11,6 +11,8 @@ namespace SnakeGame;
 /// </summary>
 public class Powerup
 {
+    int collisionRadius = 10;
+
     /// <summary>
     /// Getter/Setter the powerup ID
     /// </summary>
@@ -37,5 +39,14 @@ public class Powerup
         this.loc = loc;
         this.died = died;
 
+    }
+
+    /// <summary>
+    /// Collision Radius 
+    /// </summary>
+    /// <returns></returns>
+    public int GetCollisionRadius()
+    {
+        return collisionRadius;
     }
 }

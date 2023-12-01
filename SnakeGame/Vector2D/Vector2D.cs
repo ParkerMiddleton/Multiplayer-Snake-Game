@@ -110,12 +110,18 @@ public class Vector2D
         return Y;
     }
 
-    //public double velocity(double x, double y)
-    //{
-    //    return 
-    //}
-
-
+    /// <summary>
+    /// Returns the magnitude of two vectors after subtraction, useful for 
+    /// determining distance between two objects. 
+    /// </summary>
+    /// <param name="v1"></param>
+    /// <param name="v2"></param>
+    /// <returns></returns>
+    public static double DistanceBetweenTwoVectors(Vector2D v1, Vector2D v2)
+    {
+        //Distance formula
+        return Math.Sqrt(Math.Pow(v2.GetX() - v1.GetX(), 2) + Math.Pow(v2.GetY() - v1.GetY(),2));
+    }
 
     /// <summary>
     /// Clamp x and y to be within the range -1 .. 1

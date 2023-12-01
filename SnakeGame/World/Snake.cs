@@ -13,6 +13,14 @@ namespace SnakeGame;
 /// </summary>
 public class Snake
 {
+    // in order for a snake to spawn, it can not be within 50 pixels of a collidable object.
+    private int RespawnRadius = 50;
+
+    //An invisible barrier surrounding the snakes head, if anything comes in contact with this barrier
+    // then a collision will be triggered. 
+    // 10 bc snakes are drawn at a width of 10 
+    private int collisonRadius = 10;
+
     /// <summary>
     /// Getter/Setter method for snake ID.
     /// </summary>
@@ -105,6 +113,24 @@ public class Snake
         dc = false;
         join = true;  // should this be true? 
         previousDir =  new Vector2D();
+    }
+
+    /// <summary>
+    /// Getter for Collison Radius
+    /// </summary>
+    /// <returns></returns>
+    public int GetCollisonRadius()
+    {
+        return collisonRadius;
+    }
+
+    /// <summary>
+    /// Getter for Respawn Radius
+    /// </summary>
+    /// <returns></returns>
+    public int GetRespawnRadius()
+    {
+        return RespawnRadius;
     }
 
 }
