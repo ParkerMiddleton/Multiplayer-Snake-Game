@@ -27,16 +27,12 @@ public class Server
     private int Snake_Starting_Length = 0;
     private int Snake_Growth_Rate = 0;
 
-
-
     //Basic Movement Vectors
     private Vector2D UP = new Vector2D(0, -1);
     private Vector2D DOWN = new Vector2D(0, 1);
     private Vector2D LEFT = new Vector2D(-1, 0);
     private Vector2D RIGHT = new Vector2D(1, 0);
     private Dictionary<Snake, int> scoreKeeper;
-
-
 
 
 
@@ -316,7 +312,7 @@ public class Server
                 FPS++;
                 watch.Restart();
                 Update();
-                moveSnake();
+                MoveSnake();
                 Collision();
             }
             Console.WriteLine("FPS: " + FPS);
@@ -328,7 +324,7 @@ public class Server
     /// Keeps the snake's head moving and keeps the tail following the second to last snake segment
     /// provided that the snakes length is not 2 segments long
     /// </summary>
-    private void moveSnake()
+    private void MoveSnake()
     {
         lock (theWorld)
         {
@@ -432,7 +428,6 @@ public class Server
         }
     }
 
-
     private void Respawn() //need to add logic that checks if objects are in way
     {
         foreach (Snake snake in theWorld.Players.Values)
@@ -487,6 +482,7 @@ public class Server
             IEnumerable<int> IDsOfSnakesToRemove = theWorld.Players.Values.Where(x => x.died).Select(x => x.snake);
             foreach (int snakeID in IDsOfSnakesToRemove)
                 theWorld.Players.Remove(snakeID);
+
             IEnumerable<int> IDsOfPowerupsToRemove = theWorld.Powerups.Values.Where(x => x.died).Select(x => x.power);
             foreach (var powerups in IDsOfPowerupsToRemove)
                 theWorld.Powerups.Remove(powerups);
@@ -497,11 +493,8 @@ public class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-
                     Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
-
-
                 }
                 catch (JsonException e)
                 {
