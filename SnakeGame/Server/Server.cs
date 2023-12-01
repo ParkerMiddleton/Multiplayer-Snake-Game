@@ -314,6 +314,7 @@ public class Server
                 Update();
                 MoveSnake();
                 Collision();
+                Respawn();
             }
             Console.WriteLine("FPS: " + FPS);
             fpsWatch.Restart();
@@ -440,8 +441,8 @@ public class Server
 
                 //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 //Vector2D newTail = new(rand.Next(-800, 800), rand.Next(-800, 800));
-                Vector2D newHead = new(1, 1); //hard coded for now because random is not working for some reason
-                Vector2D newTail = new(1, 4);
+                Vector2D newHead = new(1, 120); //hard coded for now because random is not working for some reason
+                Vector2D newTail = new(1, 0);
 
                 List<Vector2D> newBody = new List<Vector2D> { newTail, newHead };
                 snake.body = newBody;
