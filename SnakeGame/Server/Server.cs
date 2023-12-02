@@ -318,6 +318,7 @@ public class Server
                 Update();
                 MoveSnake();
                 Collision();
+                WrapAround();
                 CheckForRespawns();
                 MaintainPowerups();
             }
@@ -421,21 +422,21 @@ public class Server
         {
             foreach (Snake snake in theWorld.Players.Values)
             {
-                //Snake Collides with Wall
-                foreach (Wall wall in theWorld.Walls.Values)
-                {
-                    Vector2D head = snake.body.Last();
-                    double wallStartX = wall.p1.GetX() - 25;
-                    double wallEndX = wall.p2.GetX() + 25;
-                    double wallStartY = wall.p1.GetY() - 25;
-                    double wallEndY = wall.p2.GetY() + 25;
-                    if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
-                    head.GetY() >= wallStartY && head.GetY() <= wallEndY)
-                    {
-                        snake.died = true;
-                        snake.alive = false;
-                    }
-                }
+            //    //Snake Collides with Wall
+            //    foreach (Wall wall in theWorld.Walls.Values)
+            //    {
+            //        Vector2D head = snake.body.Last();
+            //        double wallStartX = wall.p1.GetX() - 25;
+            //        double wallEndX = wall.p2.GetX() + 25;
+            //        double wallStartY = wall.p1.GetY() - 25;
+            //        double wallEndY = wall.p2.GetY() + 25;
+            //        if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
+            //        head.GetY() >= wallStartY && head.GetY() <= wallEndY)
+            //        {
+            //            snake.died = true;
+            //            snake.alive = false;
+            //        }
+            //    }
 
                 //Snake Collides with powerup
                 foreach (Powerup power in theWorld.Powerups.Values)
@@ -533,19 +534,42 @@ public class Server
         return new Vector2D(Xcoord, Ycoord);
     }
 
-    
-    //Since the score is tied to the snake, and the client displays its value, this wont be necessary
-    //private void keepScore()
-    //{
-    //    foreach (Snake snake in theWorld.Players.Values)
-    //    {
-    //        scoreKeeper.Add(snake, snake.score);
-    //        if (snake.dc == true)
-    //        {
-    //            scoreKeeper.Remove(snake);
-    //        }
-    //    }
-    //}
+
+    private void WrapAround()
+    {
+        foreach (Snake snake in theWorld.Players.Values)
+        {
+            double range = 999; //theWorld.size returns 0 need to find a dynamic way to get size;
+            List<Vector2D> updatedBody = new List<Vector2D>();
+
+            foreach (Vector2D segment in snake.body)
+            {
+                double newX = segment.GetX();
+                double newY = segment.GetY();
+
+                if (segment.GetX() > range)
+                {
+                    newX = -range;
+                }
+                else if (segment.GetX() < -range)
+                {
+                    newX = range;
+                }
+
+                if (segment.GetY() > range)
+                {
+                    newY = -range;
+                }
+                else if (segment.GetY() < -range)
+                {
+                    newY = range;
+                }
+
+                updatedBody.Add(new Vector2D(newX, newY));
+            }
+            snake.body = updatedBody;
+        }
+    }
 
 
     /// <summary>
