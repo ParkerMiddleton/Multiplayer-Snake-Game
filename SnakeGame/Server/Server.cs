@@ -35,6 +35,8 @@ public class Server
     private Vector2D RIGHT = new Vector2D(1, 0);
     private Dictionary<Snake, int> scoreKeeper;
 
+   
+
     
 
     /// <summary>
@@ -460,6 +462,7 @@ public class Server
 
                 //Snake Collides with other Snake
                 //TODO:
+                SnakeSnakeCollision(snake);
 
                 //Snake Collides with itself
                 //TODO:
@@ -469,6 +472,45 @@ public class Server
             }
         }
     }
+
+
+    private void SnakeSnakeCollision(Snake snake) //heavent checked this and need to check if head collides with any point betweeen vectors of othersnake body
+    {
+        foreach (Snake otherSnake in theWorld.Players.Values)
+        {
+            if (snake != otherSnake) 
+            {
+                // head - head collision
+                Vector2D head = snake.body.Last();
+                Vector2D otherSnakeHead = otherSnake.body.Last();
+                
+                if (head.Equals(otherSnake))
+                {
+                    snake.died = true;
+                    snake.alive = false;
+                    return;
+                }
+
+                // head - body collision
+                for (int i = 0; i < otherSnake.body.Count - 1; i++)
+                {
+                    if (head.Equals(otherSnake.body[i]))
+                    {
+                        snake.died = true;
+                        snake.alive = false;
+                    }
+                    else if (otherSnakeHead.Equals(snake.body[i]))
+                    {
+                        otherSnake.died = true;
+                        otherSnake.alive = false;
+                    }
+ 
+                }
+            }
+        }
+    }
+
+
 
     /*
      * Just an Idea, but what if we tied an objects respawn time to the object itself? a snake could have 
@@ -488,10 +530,10 @@ public class Server
                 snake.score = 0; //set score back to zero
                 int adjustedSize = Snake_Starting_Length;
 
-               // Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
+               //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 //Vector2D newTail = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 Vector2D newHead = new(1, 120); //hard coded for now because random is not working for some reason
-                Vector2D newTail = new(1, 0);
+               Vector2D newTail = new(1, 0);
 
 
                 List<Vector2D> newBody = new List<Vector2D> { newTail, newHead };
@@ -514,9 +556,9 @@ public class Server
         {
             for (int i = 0; i < Max_Powerups - theWorld.Powerups.Count; i++)
             {
-                ID += 12;
-                Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);
-                theWorld.Powerups.Add(ID, powerup);
+                    ID += 12;
+                    Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);  
+                        theWorld.Powerups.Add(ID, powerup);
             }
         }
     }
@@ -526,13 +568,28 @@ public class Server
     /// X and Y values are randomly assigned but within the bounds of the world size. 
     /// </summary>
     /// <returns></returns>
-    private Vector2D GeneratePowerupSpawnLocation() //Right now this allows for spawning on top of objects
+    private Vector2D GeneratePowerupSpawnLocation()
     {
         Random rand = new Random();
+        Vector2D location = new();
         int Xcoord = rand.Next(-World_Size / 2, World_Size / 2);
         int Ycoord = rand.Next(-World_Size / 2, World_Size / 2);
-        return new Vector2D(Xcoord, Ycoord);
+
+        location = new(Xcoord, Ycoord);
+        for (int i = 0; i < theWorld.Walls.Count(); i++)
+        {
+            if (location.GetX() >= theWorld.Walls[i].p1.GetX() - 50 && location.GetX() <= theWorld.Walls[i].p2.GetX() + 50
+                && location.GetY() >= theWorld.Walls[i].p1.GetY() - 50 && location.GetY() <= theWorld.Walls[i].p2.GetY() + 50)
+            {
+                double newX = location.GetX() + 75;
+                double newY = location.GetY() + 75;
+                location = new(newX, newY);
+            }
+        }
+        return location;
     }
+
+
 
 
     private void WrapAround()
