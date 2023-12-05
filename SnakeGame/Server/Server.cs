@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace SnakeGame;
 
@@ -324,7 +325,7 @@ public class Server
                 Collision();
                 //WrapAround();
                 CheckForRespawns();
-                //MaintainPowerups();
+                MaintainPowerups();
             }
             Console.WriteLine("FPS: " + FPS);
             fpsWatch.Restart();
@@ -584,21 +585,32 @@ public class Server
 
         location = new(Xcoord, Ycoord);
 
-
-        // spawn radius
-
-        // collision radius
-
-        for (int i = 0; i < theWorld.Walls.Count(); i++)
-        {
-            if (location.GetX() >= theWorld.Walls[i].p1.GetX() - 50 && location.GetX() <= theWorld.Walls[i].p2.GetX() + 50
-                && location.GetY() >= theWorld.Walls[i].p1.GetY() - 50 && location.GetY() <= theWorld.Walls[i].p2.GetY() + 50)
+        Boolean InvalidLocation = false;
+            foreach (Wall wall in theWorld.Walls.Values)
             {
-                double newX = location.GetX() + 75;
-                double newY = location.GetY() + 75;
-                location = new(newX, newY);
+            while (InvalidLocation)
+            {
+                //for walls drawn top to bottom and left to right
+                double wallStartX = wall.p1.GetX() - 50;
+                double wallEndX = wall.p2.GetX() + 50;
+                double wallStartY = wall.p1.GetY() - 50;
+                double wallEndY = wall.p2.GetY() + 50;
+
+                double oppWallStartX = wall.p1.GetX() + 50;
+                double oppWallEndX = wall.p2.GetX() - 50;
+                double oppWallStartY = wall.p1.GetY() + 50;
+                double oppWallEndY = wall.p2.GetY() - 50;
+
+                if ((location.GetX() >= wallStartX && location.GetX() <= wallEndX &&
+                location.GetY() >= wallStartY && location.GetY() <= wallEndY) | (location.GetX() <= oppWallStartX && location.GetX() >= oppWallEndX &&
+                location.GetY() <= oppWallStartY && location.GetY() >= oppWallEndY))
+                {
+                    InvalidLocation = true;
+                }
+                InvalidLocation = false;
             }
         }
+
         return location;
     }
 
