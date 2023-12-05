@@ -10,11 +10,12 @@ using System.Xml.Schema;
 
 namespace SnakeGame;
 
+
 public class Server
 {
     // always lock before modifying or iterating through any of these
     private Dictionary<long, SocketState> clients;
-    private World theWorld;
+    private readonly World theWorld;
 
     // Setting values treated as constants
     private long MS_Per_Frame = 0;
@@ -35,9 +36,9 @@ public class Server
     private Vector2D RIGHT = new Vector2D(1, 0);
     private Dictionary<Snake, int> scoreKeeper;
 
-   
 
-    
+
+
 
     /// <summary>
     /// Starts the server, loads xml then continuously outputs frames per second. 
@@ -424,21 +425,71 @@ public class Server
         {
             foreach (Snake snake in theWorld.Players.Values)
             {
-            //    //Snake Collides with Wall
-            //    foreach (Wall wall in theWorld.Walls.Values)
-            //    {
-            //        Vector2D head = snake.body.Last();
-            //        double wallStartX = wall.p1.GetX() - 25;
-            //        double wallEndX = wall.p2.GetX() + 25;
-            //        double wallStartY = wall.p1.GetY() - 25;
-            //        double wallEndY = wall.p2.GetY() + 25;
-            //        if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
-            //        head.GetY() >= wallStartY && head.GetY() <= wallEndY)
-            //        {
-            //            snake.died = true;
-            //            snake.alive = false;
-            //        }
-            //    }
+                //Snake Collides with Wall
+                foreach (Wall wall in theWorld.Walls.Values)
+                {
+                    // |                                    |
+                    // |<- p1                           p2->|
+                    // |                                    |
+                    Vector2D head = snake.body.Last();
+
+                    // left -x
+                    // right +x
+                    // up -y
+                    // down +y
+
+                    /*
+                        {"wall":0,"p1":{"x":-575.0,"y":-575.0},"p2":{"x":575.0,"y":-575.0}} // left to right
+                        {"wall":1,"p1":{"x":-575.0,"y":-575.0},"p2":{"x":-575.0,"y":575.0}} // up to down 
+
+                        {"wall":2,"p1":{"x":575.0,"y":575.0},"p2":{"x":575.0,"y":-575.0}} //down to up
+                        {"wall":3,"p1":{"x":+575.0,"y":-575.0},"p2":{"x":-575.0,"y":-575.0}} // right to left
+
+                    // look at p1 and p2
+                    // see which direction is the same, 
+                    // ^ this tells if its x or y oriented 
+                    // if p1.d is negative and p2.d is positive
+                        
+
+                     * */
+
+
+
+                    double wallStartX = wall.p1.GetX() - 25; // leftmost side
+                    double wallEndX = wall.p2.GetX() + 25; // rightmost
+
+
+
+                    if (wall.p1.GetY() > 0)
+                    {
+                        double wallStartY = wall.p1.GetY() + 25;
+
+                    }
+                    else
+                    {
+                        double wallStartY = wall.p1.GetY() - 25;
+                    }
+
+                    if (wall.p2.GetY() > 0)
+                    {
+                        double wallEndY = wall.p2.GetY() + 25;
+                    }
+                    else
+                    {
+                        double wallEndY = wall.p2.GetY() - 25;
+                    }
+
+
+
+                    if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
+                    head.GetY() >= wallStartY && head.GetY() <= wallEndY)
+                    {
+                        snake.died = true;
+                        snake.alive = false;
+                    }
+                }
+
+
 
                 //Snake Collides with powerup
                 foreach (Powerup power in theWorld.Powerups.Values)
@@ -453,10 +504,10 @@ public class Server
                     if (distance <= totalRadius)
                     {
                         power.died = true;
-                       
+
                         snake.score++;
-                        Powerup_Eaten_Delay = 24 ; //Should this be an XML Setting??
-                        
+                        Powerup_Eaten_Delay = 24; //Should this be an XML Setting??
+
                     }
                 }
 
@@ -473,17 +524,16 @@ public class Server
         }
     }
 
-
     private void SnakeSnakeCollision(Snake snake) //heavent checked this and need to check if head collides with any point betweeen vectors of othersnake body
     {
         foreach (Snake otherSnake in theWorld.Players.Values)
         {
-            if (snake != otherSnake) 
+            if (snake != otherSnake)
             {
                 // head - head collision
                 Vector2D head = snake.body.Last();
                 Vector2D otherSnakeHead = otherSnake.body.Last();
-                
+
                 if (head.Equals(otherSnake))
                 {
                     snake.died = true;
@@ -504,13 +554,11 @@ public class Server
                         otherSnake.died = true;
                         otherSnake.alive = false;
                     }
- 
+
                 }
             }
         }
     }
-
-
 
     /*
      * Just an Idea, but what if we tied an objects respawn time to the object itself? a snake could have 
@@ -530,11 +578,10 @@ public class Server
                 snake.score = 0; //set score back to zero
                 int adjustedSize = Snake_Starting_Length;
 
-               //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
+                //Vector2D newHead = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 //Vector2D newTail = new(rand.Next(-800, 800), rand.Next(-800, 800));
                 Vector2D newHead = new(1, 120); //hard coded for now because random is not working for some reason
-               Vector2D newTail = new(1, 0);
-
+                Vector2D newTail = new(1, 0);
 
                 List<Vector2D> newBody = new List<Vector2D> { newTail, newHead };
                 snake.dir = DOWN; // Starting downward
@@ -556,9 +603,9 @@ public class Server
         {
             for (int i = 0; i < Max_Powerups - theWorld.Powerups.Count; i++)
             {
-                    ID += 12;
-                    Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);  
-                        theWorld.Powerups.Add(ID, powerup);
+                ID += 12;
+                Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);
+                theWorld.Powerups.Add(ID, powerup);
             }
         }
     }
@@ -570,12 +617,19 @@ public class Server
     /// <returns></returns>
     private Vector2D GeneratePowerupSpawnLocation()
     {
+
         Random rand = new Random();
         Vector2D location = new();
         int Xcoord = rand.Next(-World_Size / 2, World_Size / 2);
         int Ycoord = rand.Next(-World_Size / 2, World_Size / 2);
 
         location = new(Xcoord, Ycoord);
+
+
+        // spawn radius
+
+        // collision radius
+
         for (int i = 0; i < theWorld.Walls.Count(); i++)
         {
             if (location.GetX() >= theWorld.Walls[i].p1.GetX() - 50 && location.GetX() <= theWorld.Walls[i].p2.GetX() + 50
@@ -591,14 +645,18 @@ public class Server
 
 
 
-
     private void WrapAround()
     {
         foreach (Snake snake in theWorld.Players.Values)
         {
-            double range = 999; //theWorld.size returns 0 need to find a dynamic way to get size;
+            double range = World_Size / 2;
             List<Vector2D> updatedBody = new List<Vector2D>();
 
+            // tail to head [] []
+            // 
+            // ()    ()heaed
+            // ()
+            // () ()  <-   ()tail
             foreach (Vector2D segment in snake.body)
             {
                 double newX = segment.GetX();
@@ -628,7 +686,6 @@ public class Server
         }
     }
 
-
     /// <summary>
     /// This is the method invoked every iteration through the frame loop. 
     /// Update the world then send it to each client
@@ -644,7 +701,11 @@ public class Server
 
             IEnumerable<int> IDsOfPowerupsToRemove = theWorld.Powerups.Values.Where(x => x.died).Select(x => x.power);
             foreach (var powerups in IDsOfPowerupsToRemove)
+            {
+                Console.WriteLine("A powerup has been removed");
                 theWorld.Powerups.Remove(powerups);
+
+            }
 
             //send snake and powerup data to client 
             foreach (Snake snake in theWorld.Players.Values)
@@ -670,6 +731,7 @@ public class Server
                     string JsonPowerup = JsonSerializer.Serialize(powerup);
                     // Console.Write(JsonPowerup + "\n");
                     SendToAllClients(JsonPowerup);
+
                 }
                 catch (JsonException e)
                 {
@@ -757,7 +819,7 @@ public class Server
         }
         if (powerupRespawnDelayNode != null && int.TryParse(powerupRespawnDelayNode.InnerText, out int powerupRespawnDelay))
         {
-            Console.WriteLine($"Parsed Powerup CheckForRespawns Delay: {powerupRespawnDelay}");
+            Console.WriteLine($"Parsed Powerup Respawn Delay: {powerupRespawnDelay}");
             Powerup_Respawn_Delay = powerupRespawnDelay;
         }
 

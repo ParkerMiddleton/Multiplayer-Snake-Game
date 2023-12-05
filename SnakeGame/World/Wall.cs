@@ -14,7 +14,6 @@ namespace SnakeGame;
 public class Wall
 {
 
-
     /// <summary>
     /// Getter/setter method for wall ID.
     /// </summary>
@@ -56,6 +55,12 @@ public class Wall
     /// Y2 = Bottom-most side
     /// </summary>
     /// <returns>List of doubles[x1, y1, x2, y2]</returns>
+    /// 
+
+    // |
+    // |
+    // |
+    // |_______________________
     public IEnumerable<double> GetCollisonBoundsOfWall(Vector2D p1, Vector2D p2)
     {
         List<double> bounds = new()

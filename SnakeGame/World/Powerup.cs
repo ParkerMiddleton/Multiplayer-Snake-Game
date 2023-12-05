@@ -11,7 +11,7 @@ namespace SnakeGame;
 /// </summary>
 public class Powerup
 {
-    int collisionRadius = 10;
+    int collisionRadius = 5;
 
     /// <summary>
     /// Getter/Setter the powerup ID

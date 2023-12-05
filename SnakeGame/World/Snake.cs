@@ -19,7 +19,7 @@ public class Snake
     //An invisible barrier surrounding the snakes head, if anything comes in contact with this barrier
     // then a collision will be triggered. 
     // 10 bc snakes are drawn at a width of 10 
-    private int collisonRadius = 10;
+    private int collisonRadius = 5;
 
     /// <summary>
     /// Getter/Setter method for snake ID.
