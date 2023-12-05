@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
+using System.Security.Cryptography;
 
 namespace SnakeGame;
 
@@ -321,9 +322,9 @@ public class Server
                 Update();
                 MoveSnake();
                 Collision();
-                WrapAround();
+                //WrapAround();
                 CheckForRespawns();
-                MaintainPowerups();
+                //MaintainPowerups();
             }
             Console.WriteLine("FPS: " + FPS);
             fpsWatch.Restart();
@@ -428,58 +429,13 @@ public class Server
                 //Snake Collides with Wall
                 foreach (Wall wall in theWorld.Walls.Values)
                 {
-                    // |                                    |
-                    // |<- p1                           p2->|
-                    // |                                    |
                     Vector2D head = snake.body.Last();
 
-                    // left -x
-                    // right +x
-                    // up -y
-                    // down +y
-
-                    /*
-                        {"wall":0,"p1":{"x":-575.0,"y":-575.0},"p2":{"x":575.0,"y":-575.0}} // left to right
-                        {"wall":1,"p1":{"x":-575.0,"y":-575.0},"p2":{"x":-575.0,"y":575.0}} // up to down 
-
-                        {"wall":2,"p1":{"x":575.0,"y":575.0},"p2":{"x":575.0,"y":-575.0}} //down to up
-                        {"wall":3,"p1":{"x":+575.0,"y":-575.0},"p2":{"x":-575.0,"y":-575.0}} // right to left
-
-                    // look at p1 and p2
-                    // see which direction is the same, 
-                    // ^ this tells if its x or y oriented 
-                    // if p1.d is negative and p2.d is positive
-                        
-
-                     * */
-
-
-
-                    double wallStartX = wall.p1.GetX() - 25; // leftmost side
-                    double wallEndX = wall.p2.GetX() + 25; // rightmost
-
-
-
-                    if (wall.p1.GetY() > 0)
-                    {
-                        double wallStartY = wall.p1.GetY() + 25;
-
-                    }
-                    else
-                    {
-                        double wallStartY = wall.p1.GetY() - 25;
-                    }
-
-                    if (wall.p2.GetY() > 0)
-                    {
-                        double wallEndY = wall.p2.GetY() + 25;
-                    }
-                    else
-                    {
-                        double wallEndY = wall.p2.GetY() - 25;
-                    }
-
-
+                    //for walls drawn top to bottom and left to right
+                    double wallStartX = wall.p1.GetX() - 25;
+                    double wallEndX = wall.p2.GetX() + 25;
+                    double wallStartY = wall.p1.GetY() - 25;
+                    double wallEndY = wall.p2.GetY() + 25;
 
                     if (head.GetX() >= wallStartX && head.GetX() <= wallEndX &&
                     head.GetY() >= wallStartY && head.GetY() <= wallEndY)
@@ -487,9 +443,20 @@ public class Server
                         snake.died = true;
                         snake.alive = false;
                     }
+
+                    //for walls drawn bottom to top and right to left
+                    wallStartX = wall.p1.GetX() + 25;
+                    wallEndX = wall.p2.GetX() - 25;
+                    wallStartY = wall.p1.GetY() + 25;
+                    wallEndY = wall.p2.GetY() - 25;
+
+                    if (head.GetX() <= wallStartX && head.GetX() >= wallEndX &&
+                    head.GetY() <= wallStartY && head.GetY() >= wallEndY)
+                    {
+                        snake.died = true;
+                        snake.alive = false;
+                    }
                 }
-
-
 
                 //Snake Collides with powerup
                 foreach (Powerup power in theWorld.Powerups.Values)
@@ -504,9 +471,8 @@ public class Server
                     if (distance <= totalRadius)
                     {
                         power.died = true;
-
                         snake.score++;
-                        Powerup_Eaten_Delay = 24; //Should this be an XML Setting??
+                        Powerup_Eaten_Delay = 24; // Grows the snake 
 
                     }
                 }
@@ -560,14 +526,7 @@ public class Server
         }
     }
 
-    /*
-     * Just an Idea, but what if we tied an objects respawn time to the object itself? a snake could have 
-     * a respawn timer in its class, and only be elegable for a respawn if that timer is zero, 
-     * same with powerups. 
-     * 
-     * The way that you are doing it here seems fine, I just worry about multiple snakes dying at once causing this method to stall 
-     * if the respawn timer is more than a few seconds. 
-     */
+
     private void CheckForRespawns() //need to add logic that checks if objects are in way
     {
         foreach (Snake snake in theWorld.Players.Values)
