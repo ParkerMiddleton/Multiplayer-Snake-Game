@@ -579,21 +579,31 @@ public class Server
     /// <summary>
     /// Determines if a snake has hit another snake on a given frame
     /// </summary>
-    /// <param name="snake"></param>
+    /// <param name="currentSnake"></param>
     /// <returns></returns>
     private bool CheckForPlayerVsPlayerCollision(Snake snake) //heavent checked this and need to check if head collides with any point betweeen vectors of othersnake body
     {
+        Snake currentSnake = snake;
         lock (theWorld)
         {
             // iterate through all current snakes
             foreach (Snake otherSnake in theWorld.Players.Values)
             {
-                if (!snake.snake.Equals(otherSnake.snake))
+                if (!currentSnake.Equals(otherSnake))
                 {
-                    for (int i = 1; i < otherSnake.body.Count; i++)
+                    // head on head collision
+                    Vector2D currentHeadLocation = currentSnake.body.Last();
+                    int currentCollisionRadius = currentSnake.GetCollisonRadius();
+                    Vector2D otherHeadLocation = otherSnake.body.Last();
+                    int otherCollisionRadius = currentSnake.GetCollisonRadius();
+                    double distance = Vector2D.DistanceBetweenTwoVectors(currentHeadLocation, otherHeadLocation);
+                    int totalRadius = currentCollisionRadius + otherCollisionRadius;
+
+                    // if snakes collide head on, it is decided at random who will die.
+                    if (distance <= totalRadius)
                     {
-                        if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i + 1].GetX() &&
-                            snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i + 1].GetY())
+                        Random dieDecider = new();
+                        if (dieDecider.Next(0, 1) == 1)
                         {
                             return true;
                         }
@@ -604,109 +614,48 @@ public class Server
                             return true;
                         }
                     }
+                    Console.WriteLine("Checking for collisions...");
+
+                    Console.WriteLine("OtherSnakeID: " + otherSnake.snake);
+                    Console.WriteLine("currentSnakeID: " + snake.snake);
+                    
+                    // head on body
+                    for (int i = otherSnake.body.Count - 1; i > 0; i--)
+                    {
+                        Console.WriteLine("Current Snake: " + snake.name);
+                        Console.WriteLine("Opposing Snake: " + otherSnake.name);
+                        double leftX = otherSnake.body[i].GetX() - 5;
+                        Console.WriteLine("The opposing snakes LeftX Segment is: " + leftX);
+                        double leftY = otherSnake.body[i].GetY() + 5;
+                        Console.WriteLine("The opposing snakes LeftY Segment is: " + leftY);
+                        double rightX = otherSnake.body[i-1].GetX() - 5;
+                        Console.WriteLine("The opposing snakes RightX Segment is: " + rightX);
+                        double rightY = otherSnake.body[i-1].GetY() + 5;
+                        Console.WriteLine("The opposing snakes RightY Segment is: " + rightY);
+                        Console.WriteLine();
 
 
-                //// make sure were not comparing the current snake to itself
-                //if (!snake.Equals(otherSnake)) // Note: added a .Equals method for snake model class
-                //{
-                //    // head on head collision
-                //    Vector2D currentHeadLocation = snake.body.Last();
-                //    int currentCollisionRadius = snake.GetCollisonRadius();
-                //    Vector2D otherHeadLocation = otherSnake.body.Last();
-                //    int otherCollisionRadius = snake.GetCollisonRadius();
-                //    double distance = Vector2D.DistanceBetweenTwoVectors(currentHeadLocation, otherHeadLocation);
-                //    int totalRadius = currentCollisionRadius + otherCollisionRadius;
+                        if (currentSnake.body.Last().GetY() <= leftY && currentSnake.body.Last().GetY() >= rightY &&
+                            currentSnake.body.Last().GetX() <= leftX && currentSnake.body.Last().GetX() >= rightX)
+                        {
+                            Console.WriteLine("I AM GETTING CALLED ");
+                            return true;
+                        }
 
-                //    // if snakes collide head on, it is decided at random who will die.
-                //    if (distance <= totalRadius)
-                //    {
-                //        Random dieDecider = new();
-                //        if (dieDecider.Next(0, 1) == 1)
-                //        {
-                //            snake.died = true;
-                //            snake.alive = false;
-                //            return true;
-                //        }
-                //        else
-                //        {
-                //            otherSnake.died = true;
-                //            otherSnake.alive = false;
-                //            return true;
-                //        }
-                //    }
-
-                //    // head on opposing snakes body collision
-                //    // count backwards from the head until i == 1 so zero isnt hit
-                //    for (int i = otherSnake.body.Count - 1; i > 1; i--)
-                //    {
-                //        // Get the direction that the two vectors are facing
-                //        double angle = Vector2D.AngleBetweenPoints(otherSnake.body[i], otherSnake.body[i - 1]);
-
-                    //    Console.WriteLine(angle + " of the opposing snake" );
-                    //    // segment is Vertical
-                    //    // just trying to get one segment to collide first before progressing. 
-                    //    if (angle == 180)
+                    }
+                    //for (int i = otherSnake.body.Count -1; i >1; i--)
+                    //{
+                    //    if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i - 1].GetX() &&
+                    //        snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i - 1].GetY())
                     //    {
-                            
-                    //        double upperX = otherSnake.body[i -1].GetX()-5;
-                    //        double upperY = otherSnake.body[i =1 ].GetY()-5;
-                            
-                    //        double lowerX = otherSnake.body[i].GetX()+5;
-                    //        double lowerY = otherSnake.body[i].GetY()+5;
-
-                    //        if (snake.body.Last().GetY() <= upperY && snake.body.Last().GetY() >= lowerY &&
-                    //            snake.body.Last().GetX() <= upperX && snake.body.Last().GetX() >= lowerX)
-                    //        {
-                    //            return true;
-                    //        }
+                    //        return true;
                     //    }
-
-                        //// segment is horizontal
-                        //if (angle == 90 )
-                        //{
-                        //    double upperY = otherSnake.body[i].GetX();
-                        //    double lowerY = otherSnake.body[i - 1].GetX();
-                        //    if (snake.body.Last().GetX() <= upperY && snake.body.Last().GetX() >= lowerY)
-                        //    {
-                        //        snake.died = true;
-                        //        snake.alive = false;
-                        //        return true;
-                        //    }
-                        //}
-
-                        //// segment is Vertical
-                        //if (angle == 180)
-                        //{
-                        //    double upperY = otherSnake.body[i - 1].GetY();
-                        //    double lowerY = otherSnake.body[i].GetY();
-                        //    if (snake.body.Last().GetY() >= upperY && snake.body.Last().GetY() <= lowerY)
-                        //    {
-                        //        snake.died = true;
-                        //        snake.alive = false;
-                        //        return true;
-                        //    }
-                        //}
-
-                        //// segment is horizontal
-                        //if (angle == -90)
-                        //{
-                        //    double upperY = otherSnake.body[i - 1].GetX();
-                        //    double lowerY = otherSnake.body[i].GetX();
-                        //    if (snake.body.Last().GetX() >= upperY && snake.body.Last().GetX() <= lowerY)
-                        //    {
-                        //        snake.died = true;
-                        //        snake.alive = false;
-                        //        return true;
-                        //    }
-        //                //}
-        //            }
-
-        //        }
-        //    }
-        //    return false;
-        //}
+                    //}
+                }
+            }
+            return false;
+        }
     }
-
 
     /// <summary>
     /// Determines if the snake has hit itself on a given frame
@@ -720,15 +669,15 @@ public class Server
         {
             foreach (Snake snake in theWorld.Players.Values)
             {
-                    for (int i = 1; i < snake.body.Count; i++)
+                for (int i = 1; i < snake.body.Count; i++)
+                {
+                    if (snake.body.Last().GetX() >= snake.body[i].GetX() && snake.body.Last().GetX() <= snake.body[i + 1].GetX() &&
+                        snake.body.Last().GetY() >= snake.body[i].GetY() && snake.body.Last().GetY() <= snake.body[i + 1].GetY())
                     {
-                        if (snake.body.Last().GetX() >= snake.body[i].GetX() && snake.body.Last().GetX() <= snake.body[i + 1].GetX() &&
-                            snake.body.Last().GetY() >= snake.body[i].GetY() && snake.body.Last().GetY() <= snake.body[i + 1].GetY())
-                        {
-                            selfCollision = true;
-                        }
-                        selfCollision = false;
+                        selfCollision = true;
                     }
+                    selfCollision = false;
+                }
             }
         }
         return selfCollision;
