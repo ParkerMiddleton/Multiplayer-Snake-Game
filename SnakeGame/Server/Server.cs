@@ -39,7 +39,8 @@ public class Server
     private Dictionary<Snake, int> scoreKeeper;
 
 
-
+    //TO-DO
+    //location for snake to respawn needs to be random, and can not be on top of walls
 
 
     /// <summary>
@@ -577,20 +578,22 @@ public class Server
     /// <returns></returns>
     private Vector2D GeneratePowerupSpawnLocation()
     {
-
         Random rand = new Random();
-        Vector2D location = new();
-        int Xcoord = rand.Next(-World_Size / 2, World_Size / 2);
-        int Ycoord = rand.Next(-World_Size / 2, World_Size / 2);
+        Vector2D location;
+        bool invalidLocation;
 
-        location = new(Xcoord, Ycoord);
+        do
+        {
+            int Xcoord = rand.Next(-World_Size / 2, World_Size / 2);
+            int Ycoord = rand.Next(-World_Size / 2, World_Size / 2);
 
-        Boolean InvalidLocation = false;
+            location = new Vector2D(Xcoord, Ycoord);
+            invalidLocation = false;
+
             foreach (Wall wall in theWorld.Walls.Values)
             {
-            while (InvalidLocation)
-            {
-                //for walls drawn top to bottom and left to right
+
+
                 double wallStartX = wall.p1.GetX() - 50;
                 double wallEndX = wall.p2.GetX() + 50;
                 double wallStartY = wall.p1.GetY() - 50;
@@ -602,17 +605,53 @@ public class Server
                 double oppWallEndY = wall.p2.GetY() - 50;
 
                 if ((location.GetX() >= wallStartX && location.GetX() <= wallEndX &&
-                location.GetY() >= wallStartY && location.GetY() <= wallEndY) | (location.GetX() <= oppWallStartX && location.GetX() >= oppWallEndX &&
-                location.GetY() <= oppWallStartY && location.GetY() >= oppWallEndY))
+                     location.GetY() >= wallStartY && location.GetY() <= wallEndY) ||
+                    (location.GetX() <= oppWallStartX && location.GetX() >= oppWallEndX &&
+                     location.GetY() <= oppWallStartY && location.GetY() >= oppWallEndY))
                 {
-                    InvalidLocation = true;
+                    invalidLocation = true;
+                    break;
                 }
-                InvalidLocation = false;
             }
-        }
+        } while (invalidLocation);
 
         return location;
     }
+
+
+    public Boolean WallCollision(Vector2D obj)
+    {
+        Boolean WallCollision = false;
+        foreach (Wall wall in theWorld.Walls.Values)
+        {
+            double wallStartX = wall.p1.GetX() - 50;
+            double wallEndX = wall.p2.GetX() + 50;
+            double wallStartY = wall.p1.GetY() - 50;
+            double wallEndY = wall.p2.GetY() + 50;
+
+            double oppWallStartX = wall.p1.GetX() + 50;
+            double oppWallEndX = wall.p2.GetX() - 50;
+            double oppWallStartY = wall.p1.GetY() + 50;
+            double oppWallEndY = wall.p2.GetY() - 50;
+
+            if ((obj.GetX() >= wallStartX && obj.GetX() <= wallEndX &&
+                 obj.GetY() >= wallStartY && obj.GetY() <= wallEndY) ||
+                (obj.GetX() <= oppWallStartX && obj.GetX() >= oppWallEndX &&
+                 obj.GetY() <= oppWallStartY && obj.GetY() >= oppWallEndY))
+            {
+                WallCollision = true;
+            
+            }
+            WallCollision = false;
+        }
+        return WallCollision;
+    }
+
+    public Boolean PowerupCollision(Vector2D obj)
+    {
+        return true;
+    }
+    
 
 
 
