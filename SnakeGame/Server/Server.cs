@@ -588,22 +588,12 @@ public class Server
             // iterate through all current snakes
             foreach (Snake otherSnake in theWorld.Players.Values)
             {
-                // make sure were not comparing the current snake to itself
-                if (!snake.Equals(otherSnake)) // Note: added a .Equals method for snake model class
+                if (!snake.snake.Equals(otherSnake.snake))
                 {
-                    // head on head collision
-                    Vector2D currentHeadLocation = snake.body.Last();
-                    int currentCollisionRadius = snake.GetCollisonRadius();
-                    Vector2D otherHeadLocation = otherSnake.body.Last();
-                    int otherCollisionRadius = snake.GetCollisonRadius();
-                    double distance = Vector2D.DistanceBetweenTwoVectors(currentHeadLocation, otherHeadLocation);
-                    int totalRadius = currentCollisionRadius + otherCollisionRadius;
-
-                    // if snakes collide head on, it is decided at random who will die.
-                    if (distance <= totalRadius)
+                    for (int i = 1; i < otherSnake.body.Count; i++)
                     {
-                        Random dieDecider = new();
-                        if (dieDecider.Next(0, 1) == 1)
+                        if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i + 1].GetX() &&
+                            snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i + 1].GetY())
                         {
                             return true;
                         }
@@ -615,12 +605,42 @@ public class Server
                         }
                     }
 
-                    // head on opposing snakes body collision
-                    // count backwards from the head until i == 1 so zero isnt hit
-                    for (int i = otherSnake.body.Count - 1; i > 1; i--) { 
-                    //{
-                    //    // Get the direction that the two vectors are facing
-                    //    double angle = Vector2D.AngleBetweenPoints(otherSnake.body[i], otherSnake.body[i - 1]);
+
+                //// make sure were not comparing the current snake to itself
+                //if (!snake.Equals(otherSnake)) // Note: added a .Equals method for snake model class
+                //{
+                //    // head on head collision
+                //    Vector2D currentHeadLocation = snake.body.Last();
+                //    int currentCollisionRadius = snake.GetCollisonRadius();
+                //    Vector2D otherHeadLocation = otherSnake.body.Last();
+                //    int otherCollisionRadius = snake.GetCollisonRadius();
+                //    double distance = Vector2D.DistanceBetweenTwoVectors(currentHeadLocation, otherHeadLocation);
+                //    int totalRadius = currentCollisionRadius + otherCollisionRadius;
+
+                //    // if snakes collide head on, it is decided at random who will die.
+                //    if (distance <= totalRadius)
+                //    {
+                //        Random dieDecider = new();
+                //        if (dieDecider.Next(0, 1) == 1)
+                //        {
+                //            snake.died = true;
+                //            snake.alive = false;
+                //            return true;
+                //        }
+                //        else
+                //        {
+                //            otherSnake.died = true;
+                //            otherSnake.alive = false;
+                //            return true;
+                //        }
+                //    }
+
+                //    // head on opposing snakes body collision
+                //    // count backwards from the head until i == 1 so zero isnt hit
+                //    for (int i = otherSnake.body.Count - 1; i > 1; i--)
+                //    {
+                //        // Get the direction that the two vectors are facing
+                //        double angle = Vector2D.AngleBetweenPoints(otherSnake.body[i], otherSnake.body[i - 1]);
 
                     //    Console.WriteLine(angle + " of the opposing snake" );
                     //    // segment is Vertical
@@ -678,13 +698,13 @@ public class Server
                         //        snake.alive = false;
                         //        return true;
                         //    }
-                        //}
-                    }
+        //                //}
+        //            }
 
-                }
-            }
-            return false;
-        }
+        //        }
+        //    }
+        //    return false;
+        //}
     }
 
 
@@ -695,7 +715,24 @@ public class Server
     /// <exception cref="NotImplementedException"></exception>
     private bool CheckForSelfColision()
     {
-        throw new NotImplementedException();
+        bool selfCollision = false; //only would need to check if head crosses body i believe???
+        lock (theWorld)
+        {
+            foreach (Snake snake in theWorld.Players.Values)
+            {
+                    for (int i = 1; i < snake.body.Count; i++)
+                    {
+                        if (snake.body.Last().GetX() >= snake.body[i].GetX() && snake.body.Last().GetX() <= snake.body[i + 1].GetX() &&
+                            snake.body.Last().GetY() >= snake.body[i].GetY() && snake.body.Last().GetY() <= snake.body[i + 1].GetY())
+                        {
+                            selfCollision = true;
+                        }
+                        selfCollision = false;
+                    }
+            }
+        }
+        return selfCollision;
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
