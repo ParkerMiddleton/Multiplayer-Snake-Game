@@ -590,14 +590,17 @@ public class Server
             // iterate through all current snakes
             foreach (Snake otherSnake in theWorld.Players.Values)
             {
-                for (int i = 1; i < otherSnake.body.Count; i++)
+                if (!snake.snake.Equals(otherSnake.snake))
                 {
-                    if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i + 1].GetX() &&
-                        snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i + 1].GetY())
+                    for (int i = 1; i < otherSnake.body.Count; i++)
                     {
-                        snakeCollision = true;
+                        if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i + 1].GetX() &&
+                            snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i + 1].GetY())
+                        {
+                            snakeCollision = true;
+                        }
+                        snakeCollision = false;
                     }
-                    snakeCollision = false;
                 }
             }
         }
