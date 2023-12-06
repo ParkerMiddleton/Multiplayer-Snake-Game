@@ -338,10 +338,11 @@ public class Server
 
                 UpdateSnakeMovement(); // done
 
-               CheckForCollisions();
+                CheckForCollisions(); // done 
 
                 WrapAround();
-                CheckForPlayerRespawns();
+
+                CheckForPlayerRespawns();// done
 
                 MakeSurePowerupsAreAtMaximum(); // done 
 
@@ -456,7 +457,7 @@ public class Server
 
             if (snake.body.Last().GetX() > range || snake.body.Last().GetX() < -range || snake.body.Last().GetY() > range || snake.body.Last().GetY() < -range)
             {
-                foreach(Vector2D segment in snake.body)
+                foreach (Vector2D segment in snake.body)
                 {
                     //x-coord
                     if (snake.dir.GetX() != 0 && segment.GetX() > 0)
@@ -469,7 +470,7 @@ public class Server
                     {
                         xCord = (segment.GetX() * -1) - 2;
                     }
-                    
+
                     else
                     {
                         xCord = segment.GetX();
@@ -494,46 +495,11 @@ public class Server
                     updatedBody.Add(newSegment);
                     updatedBody = ReverseList(updatedBody);
                 }
-
                 snake.body = updatedBody;
             }
-
-            }
-           
-
-
-        //foreach (Snake snake in theWorld.Players.Values)
-        //{
-        //    double range = World_Size / 2;
-        //    List<Vector2D> updatedBody = new List<Vector2D>();
-        //    foreach (Vector2D segment in snake.body)
-        //    {
-        //        double newX = segment.GetX();
-        //        double newY = segment.GetY();
-
-        //        if (segment.GetX() > range)
-        //        {
-        //            newX = -range;
-        //        }
-        //        else if (segment.GetX() < -range)
-        //        {
-        //            newX = range;
-        //        }
-
-        //        if (segment.GetY() > range)
-        //        {
-        //            newY = -range;
-        //        }
-        //        else if (segment.GetY() < -range)
-        //        {
-        //            newY = range;
-        //        }
-
-        //        updatedBody.Add(new Vector2D(newX, newY));
-        //    }
-        //    snake.body = updatedBody;
-        //}
+        }
     }
+
     public List<Vector2D> ReverseList(List<Vector2D> ListToReverse)
     {
         int count = ListToReverse.Count;
@@ -562,8 +528,7 @@ public class Server
             foreach (Snake snake in theWorld.Players.Values)
             {
                 //Snake Collides with Wall  || Snake Collides with other player
-
-                if (CheckForWallCollision(snake.body.Last(), 0) || CheckForPlayerVsPlayerCollision(snake)) // || CheckForSelfCollision(
+                if (CheckForWallCollision(snake.body.Last(), 0) || CheckForPlayerVsPlayerCollision(snake) || CheckForSelfCollision(snake))
                 {
                     snake.died = true;
                     snake.alive = false;
@@ -573,6 +538,7 @@ public class Server
                 if (CheckForPowerupCollision(snake))
                 {
                     snake.score++;
+                    // Powerup_Eaten_Delay = 24;
                 }
             }
         }
@@ -595,7 +561,6 @@ public class Server
                 Vector2D snakeHeadLocation = snake.body.Last();
                 double distance = Vector2D.DistanceBetweenTwoVectors(powerupLocation, snakeHeadLocation);
                 int totalRadius = powerupCollisionRadius + snakeHeadCollisionRadius;
-
                 if (distance <= totalRadius)
                 {
                     power.died = true;
@@ -650,6 +615,11 @@ public class Server
     private bool CheckForPlayerVsPlayerCollision(Snake snake) //heavent checked this and need to check if head collides with any point betweeen vectors of othersnake body
     {
         Snake currentSnake = snake;
+        double minX = 0;
+        double maxX = 0;
+        double minY = 0;
+        double maxY = 0;
+
         lock (theWorld)
         {
             // iterate through all current snakes
@@ -680,43 +650,43 @@ public class Server
                             return true;
                         }
                     }
-                    Console.WriteLine("Checking for collisions...");
 
-                    Console.WriteLine("OtherSnakeID: " + otherSnake.snake);
-                    Console.WriteLine("currentSnakeID: " + snake.snake);
-                    
                     // head on body
                     for (int i = otherSnake.body.Count - 1; i > 0; i--)
                     {
-                        Console.WriteLine("Current Snake: " + snake.name);
-                        Console.WriteLine("Opposing Snake: " + otherSnake.name);
                         double leftX = otherSnake.body[i].GetX() - 5;
-                        Console.WriteLine("The opposing snakes LeftX Segment is: " + leftX);
-                        double leftY = otherSnake.body[i].GetY() + 5;
-                        Console.WriteLine("The opposing snakes LeftY Segment is: " + leftY);
-                        double rightX = otherSnake.body[i-1].GetX() - 5;
-                        Console.WriteLine("The opposing snakes RightX Segment is: " + rightX);
-                        double rightY = otherSnake.body[i-1].GetY() + 5;
-                        Console.WriteLine("The opposing snakes RightY Segment is: " + rightY);
-                        Console.WriteLine();
+                        double leftY = otherSnake.body[i].GetY() - 5;
+                        double rightX = otherSnake.body[i - 1].GetX() + 5;
+                        double rightY = otherSnake.body[i - 1].GetY() + 5;
 
-
-                        if (currentSnake.body.Last().GetY() <= leftY && currentSnake.body.Last().GetY() >= rightY &&
-                            currentSnake.body.Last().GetX() <= leftX && currentSnake.body.Last().GetX() >= rightX)
+                        if (leftX < rightX)
                         {
-                            Console.WriteLine("I AM GETTING CALLED ");
-                            return true;
+                            minX = leftX;
+                            maxX = rightX;
+                        }
+                        else
+                        {
+                            minX = rightX;
+                            maxX = leftX;
                         }
 
+                        if (leftY < rightY)
+                        {
+                            minY = leftY;
+                            maxY = rightY;
+                        }
+                        else
+                        {
+                            minY = rightY;
+                            maxY = leftY;
+                        }
+
+                        if (currentSnake.body.Last().GetY() >= minY && currentSnake.body.Last().GetY() <= maxY &&
+                            currentSnake.body.Last().GetX() >= minX && currentSnake.body.Last().GetX() <= maxX)
+                        {
+                            return true;
+                        }
                     }
-                    //for (int i = otherSnake.body.Count -1; i >1; i--)
-                    //{
-                    //    if (snake.body.Last().GetX() >= otherSnake.body[i].GetX() && snake.body.Last().GetX() <= otherSnake.body[i - 1].GetX() &&
-                    //        snake.body.Last().GetY() >= otherSnake.body[i].GetY() && snake.body.Last().GetY() <= otherSnake.body[i - 1].GetY())
-                    //    {
-                    //        return true;
-                    //    }
-                    //}
                 }
             }
             return false;
@@ -728,26 +698,57 @@ public class Server
     /// </summary>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    private bool CheckForSelfColision()
+    private bool CheckForSelfCollision(Snake snake)
     {
-        bool selfCollision = false; //only would need to check if head crosses body i believe???
+        double minX = 0;
+        double maxX = 0;
+        double minY = 0;
+        double maxY = 0;
         lock (theWorld)
         {
-            foreach (Snake snake in theWorld.Players.Values)
+
+            if (snake.body.Count > 3)
             {
-                for (int i = 1; i < snake.body.Count; i++)
+                // head on body
+                for (int i = snake.body.Count - 2; i > 0; i--)
                 {
-                    if (snake.body.Last().GetX() >= snake.body[i].GetX() && snake.body.Last().GetX() <= snake.body[i + 1].GetX() &&
-                        snake.body.Last().GetY() >= snake.body[i].GetY() && snake.body.Last().GetY() <= snake.body[i + 1].GetY())
+                    double leftX = snake.body[i].GetX() - 5;
+                    double leftY = snake.body[i].GetY() - 5;
+                    double rightX = snake.body[i - 1].GetX() + 5;
+                    double rightY = snake.body[i - 1].GetY() + 5;
+
+                    if (leftX < rightX)
                     {
-                        selfCollision = true;
+                        minX = leftX;
+                        maxX = rightX;
                     }
-                    selfCollision = false;
+                    else
+                    {
+                        minX = rightX;
+                        maxX = leftX;
+                    }
+
+                    if (leftY < rightY)
+                    {
+                        minY = leftY;
+                        maxY = rightY;
+                    }
+                    else
+                    {
+                        minY = rightY;
+                        maxY = leftY;
+                    }
+
+                    if (snake.body.Last().GetY() >= minY && snake.body.Last().GetY() <= maxY &&
+                        snake.body.Last().GetX() >= minX && snake.body.Last().GetX() <= maxX)
+                    {
+                        return true;
+                    }
                 }
             }
-        }
-        return selfCollision;
 
+        }
+        return false;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -856,16 +857,6 @@ public class Server
     }
 
     /// <summary>
-    /// make sure the player doesnt spawn directly on top of a powerup
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public bool CheckForPowerupCollisionOnPlayerSpawn(Vector2D obj)
-    {
-        return true;
-    }
-
-    /// <summary>
     /// This is the method invoked every iteration through the frame loop. 
     /// Update the world then send it to each client
     /// Checks if players and powerups have died, then removes them from their repsective lists before sending that data to the client
@@ -880,32 +871,25 @@ public class Server
                 try
                 {
                     string JsonSnake = JsonSerializer.Serialize(snake);
-                    //Console.Write(JsonSnake + "\n");
                     SendToAllClients(JsonSnake);
                 }
                 catch (JsonException e)
                 {
-
                     Console.WriteLine("Error Parsing Snake JSON: " + e);
                 }
-
             }
-
             foreach (Powerup powerup in theWorld.Powerups.Values)
             {
                 try
                 {
                     string JsonPowerup = JsonSerializer.Serialize(powerup);
-                    //Console.Write(JsonPowerup + "\n");
                     SendToAllClients(JsonPowerup);
-
                 }
                 catch (JsonException e)
                 {
                     Console.WriteLine("Error Parsing Powerup JSON: " + e);
                 }
             }
-
 
             //Check if there is any dead snakes or powerups to remove, then remove them. 
             IEnumerable<int> IDsOfSnakesToRemove = theWorld.Players.Values.Where(x => x.died).Select(x => x.snake);
@@ -915,32 +899,8 @@ public class Server
             IEnumerable<int> IDsOfPowerupsToRemove = theWorld.Powerups.Values.Where(x => x.died).Select(x => x.power);
             foreach (var powerups in IDsOfPowerupsToRemove)
                 theWorld.Powerups.Remove(powerups);
-
-
-
-
         }
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    /// GENERAL HELPERS 
-    //////////////////////////////////////////////////////////////////////////
-    /// <summary>
-    /// Retrieves a direction vector based off of a cardinal angle direction
-    /// </summary>
-    /// <param name="angle">Angle between two vectors</param>
-    /// <returns>Vector2D</returns>
-    private Vector2D GetDirectionVectorFromAngle(double angle)
-    {
-        if (angle == 0)
-            return UP;
-        if (angle == 90)
-            return RIGHT;
-        if (angle == -90)
-            return LEFT;
-        return DOWN;
-    }
-
 
     //////////////////////////////////////////////////////////////////////////
     /// XML ORIENTED METHODS
