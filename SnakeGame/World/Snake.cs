@@ -133,4 +133,30 @@ public class Snake
         return RespawnRadius;
     }
 
+    /// <summary>
+    /// Compares one snake to another based on their heads.
+    /// It is not possible for two snake can have the same head coordinates 
+    /// </summary>
+    /// <param name="obj">A Snake object</param>
+    /// <returns>boolean</returns>
+    public override bool Equals(object? obj)
+    {
+        if(obj is not Snake)
+        {
+            return false;
+        }
+        Snake? snake = obj as Snake;
+        return snake!.body.Last().Equals(this.body.Last());
+
+    }
+
+
+    /// <summary>
+    /// Gives the hash code of the head of the snake, which should always never be the same. 
+    /// </summary>
+    /// <returns></returns>
+    public override int GetHashCode()
+    {
+        return body.Last().GetHashCode();
+    }
 }

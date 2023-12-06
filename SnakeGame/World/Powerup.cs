@@ -26,6 +26,7 @@ public class Powerup
     /// </summary>
     public bool died { get; set; }
 
+
     /// <summary>
     /// Parameterized Json constructor for Powerup Class -- used for Json deserialization.
     /// </summary>
