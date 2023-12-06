@@ -17,7 +17,6 @@ namespace SnakeGame;
 /// Player Vs Player Collision 
 /// Self Collision
 /// Zig Zag Collision
-/// More work on respawn player method 
 /// Delays 
 ///  -> Powerup Respawn timer 
 ///  -> Player Death (How long the player sits on a death animation)
@@ -344,7 +343,7 @@ public class Server
                 //WrapAround();
                 CheckForPlayerRespawns();
 
-                MakeSurePowerupsAreAtMaximum();
+                MakeSurePowerupsAreAtMaximum(); // done 
 
             }
             Console.WriteLine("FPS: " + FPS);
@@ -606,8 +605,6 @@ public class Server
                         Random dieDecider = new();
                         if (dieDecider.Next(0, 1) == 1)
                         {
-                            snake.died = true;
-                            snake.alive = false;
                             return true;
                         }
                         else
@@ -620,29 +617,29 @@ public class Server
 
                     // head on opposing snakes body collision
                     // count backwards from the head until i == 1 so zero isnt hit
-                    for (int i = otherSnake.body.Count - 1; i > 1; i--)
-                    {
-                        // Get the direction that the two vectors are facing
-                        double angle = Vector2D.AngleBetweenPoints(otherSnake.body[i], otherSnake.body[i - 1]);
+                    for (int i = otherSnake.body.Count - 1; i > 1; i--) { 
+                    //{
+                    //    // Get the direction that the two vectors are facing
+                    //    double angle = Vector2D.AngleBetweenPoints(otherSnake.body[i], otherSnake.body[i - 1]);
 
-                        //Console.WriteLine(angle + "");
-                        // segment is Vertical
-                        // just trying to get one segment to collide first before progressing. 
-                        if (angle == 180)
-                        {
-                            double upperY = otherSnake.body[i].GetY();
-                            double upperX = otherSnake.body[i].GetX();
-                            double lowerY = otherSnake.body[i - 1].GetY();
-                            double lowerX = otherSnake.body[i - 1].GetX();
+                    //    Console.WriteLine(angle + " of the opposing snake" );
+                    //    // segment is Vertical
+                    //    // just trying to get one segment to collide first before progressing. 
+                    //    if (angle == 180)
+                    //    {
+                            
+                    //        double upperX = otherSnake.body[i -1].GetX()-5;
+                    //        double upperY = otherSnake.body[i =1 ].GetY()-5;
+                            
+                    //        double lowerX = otherSnake.body[i].GetX()+5;
+                    //        double lowerY = otherSnake.body[i].GetY()+5;
 
-                            if (snake.body.Last().GetY() <= upperY && snake.body.Last().GetY() >= lowerY &&
-                                snake.body.Last().GetX() <= upperX && snake.body.Last().GetX() >= lowerX)
-                            {
-                                snake.died = true;
-                                snake.alive = false;
-                                return true;
-                            }
-                        }
+                    //        if (snake.body.Last().GetY() <= upperY && snake.body.Last().GetY() >= lowerY &&
+                    //            snake.body.Last().GetX() <= upperX && snake.body.Last().GetX() >= lowerX)
+                    //        {
+                    //            return true;
+                    //        }
+                    //    }
 
                         //// segment is horizontal
                         //if (angle == 90 )
@@ -733,6 +730,7 @@ public class Server
                         // randomize the location but make sure that the snake never spawns off a ledge, subtract its starting length to prevent
                         int Xcoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
                         int Ycoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
+
                         Vector2D headLocation = new Vector2D(Xcoord, Ycoord);
 
                         // derive the tails location based on those 2 variables
