@@ -716,7 +716,24 @@ public class Server
     /// <exception cref="NotImplementedException"></exception>
     private bool CheckForSelfColision()
     {
-        throw new NotImplementedException();
+        bool selfCollision = false; //only would need to check if head crosses body i believe???
+        lock (theWorld)
+        {
+            foreach (Snake snake in theWorld.Players.Values)
+            {
+                    for (int i = 1; i < snake.body.Count; i++)
+                    {
+                        if (snake.body.Last().GetX() >= snake.body[i].GetX() && snake.body.Last().GetX() <= snake.body[i + 1].GetX() &&
+                            snake.body.Last().GetY() >= snake.body[i].GetY() && snake.body.Last().GetY() <= snake.body[i + 1].GetY())
+                        {
+                            selfCollision = true;
+                        }
+                        selfCollision = false;
+                    }
+            }
+        }
+        return selfCollision;
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
