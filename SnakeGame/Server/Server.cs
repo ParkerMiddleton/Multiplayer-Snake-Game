@@ -21,7 +21,7 @@ namespace SnakeGame;
 ///  -> Powerup Respawn timer 
 ///  -> Player Death (How long the player sits on a death animation)
 ///  
-/// Wrap Around 
+/// Wrap Around  -- DONE
 /// README 
 /// </summary>
 public class Server
@@ -338,9 +338,9 @@ public class Server
 
                 UpdateSnakeMovement(); // done
 
-                CheckForCollisions();
+               CheckForCollisions();
 
-                //WrapAround();
+                WrapAround();
                 CheckForPlayerRespawns();
 
                 MakeSurePowerupsAreAtMaximum(); // done 
@@ -451,35 +451,101 @@ public class Server
         {
             double range = World_Size / 2;
             List<Vector2D> updatedBody = new List<Vector2D>();
-            foreach (Vector2D segment in snake.body)
+            double xCord = 0;
+            double yCord = 0;
+
+            if (snake.body.Last().GetX() > range || snake.body.Last().GetX() < -range || snake.body.Last().GetY() > range || snake.body.Last().GetY() < -range)
             {
-                double newX = segment.GetX();
-                double newY = segment.GetY();
+                foreach(Vector2D segment in snake.body)
+                {
+                    //x-coord
+                    if (snake.dir.GetX() != 0 && segment.GetX() > 0)
+                    {
 
-                if (segment.GetX() > range)
-                {
-                    newX = -range;
-                }
-                else if (segment.GetX() < -range)
-                {
-                    newX = range;
+                        xCord = (segment.GetX() * -1) + 2;
+
+                    }
+                    else if (snake.dir.GetX() != 0 && segment.GetX() < 0)
+                    {
+                        xCord = (segment.GetX() * -1) - 2;
+                    }
+                    
+                    else
+                    {
+                        xCord = segment.GetX();
+                    }
+                    //Y-coord
+                    if (snake.dir.GetY() != 0 && segment.GetY() > 0)
+                    {
+
+                        yCord = (segment.GetY() * -1) + 2;
+
+                    }
+                    else if (snake.dir.GetY() != 0 && segment.GetY() < 0)
+                    {
+                        yCord = (segment.GetY() * -1) - 2;
+                    }
+
+                    else
+                    {
+                        yCord = segment.GetY();
+                    }
+                    Vector2D newSegment = new(xCord, yCord);
+                    updatedBody.Add(newSegment);
+                    updatedBody = ReverseList(updatedBody);
                 }
 
-                if (segment.GetY() > range)
-                {
-                    newY = -range;
-                }
-                else if (segment.GetY() < -range)
-                {
-                    newY = range;
-                }
-
-                updatedBody.Add(new Vector2D(newX, newY));
+                snake.body = updatedBody;
             }
-            snake.body = updatedBody;
-        }
-    }
 
+            }
+           
+
+
+        //foreach (Snake snake in theWorld.Players.Values)
+        //{
+        //    double range = World_Size / 2;
+        //    List<Vector2D> updatedBody = new List<Vector2D>();
+        //    foreach (Vector2D segment in snake.body)
+        //    {
+        //        double newX = segment.GetX();
+        //        double newY = segment.GetY();
+
+        //        if (segment.GetX() > range)
+        //        {
+        //            newX = -range;
+        //        }
+        //        else if (segment.GetX() < -range)
+        //        {
+        //            newX = range;
+        //        }
+
+        //        if (segment.GetY() > range)
+        //        {
+        //            newY = -range;
+        //        }
+        //        else if (segment.GetY() < -range)
+        //        {
+        //            newY = range;
+        //        }
+
+        //        updatedBody.Add(new Vector2D(newX, newY));
+        //    }
+        //    snake.body = updatedBody;
+        //}
+    }
+    public List<Vector2D> ReverseList(List<Vector2D> ListToReverse)
+    {
+        int count = ListToReverse.Count;
+        List<Vector2D> newList = new List<Vector2D>();
+
+        for (int i = count - 1; i >= 0; i--)
+        {
+            newList.Add(ListToReverse[i]);
+        }
+
+        return newList;
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////
     /// COLLISION ORIENTED METHODS 
