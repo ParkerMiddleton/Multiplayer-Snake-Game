@@ -101,16 +101,14 @@ public class Snake
     /// </summary>
     /// <param name="snake"></param>
     /// <param name="name"></param>
-    public Snake(int snake, string name, int RespawnRateTimer, int growthRate)
+    public Snake(int snake, string name, int RespawnRateTimer, int growthRate)//, List<Vector2D> headAndTail, Vector2D direction)
     {
         this.snake = snake;
         this.name = name;
-        body = new List<Vector2D>()
-        {
-            new Vector2D(0,1),
-            new Vector2D(0,121)
-        };
+        body = new List<Vector2D> { new Vector2D(0, 1), new Vector2D(0, 121) };
         dir = new Vector2D(0, 1);
+        //body = headAndTail;
+        //dir = direction;
         score = 0;
         died = false;
         alive = true;
