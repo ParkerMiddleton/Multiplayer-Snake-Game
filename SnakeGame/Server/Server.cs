@@ -14,14 +14,12 @@ namespace SnakeGame;
 
 /// <summary>
 /// TODO:
-/// Player Vs Player Collision 
-/// Self Collision
-/// Zig Zag Collision
+/// Zig Zag Bug -> ???
 /// Delays 
 ///  -> Powerup Respawn timer 
 ///  -> Player Death (How long the player sits on a death animation)
 ///  
-/// Wrap Around  -- DONE
+/// Wrap Around 
 /// README 
 /// </summary>
 public class Server
@@ -35,21 +33,20 @@ public class Server
     private int Respawn_Rate = 0;
     private double Snake_Speed = 6;
     private int World_Size = 0;
-    private int Max_Players = 0;
     private int Max_Powerups = 0;
+    private int Powerup_Respawn_Timer = 0;
     private int Powerup_Respawn_Delay = 0;
     private int Snake_Starting_Length = 0;
     private int Snake_Growth_Rate = 0;
-    private int Powerup_Eaten_Delay = 0;
 
     //Basic Movement Vectors
     private readonly Dictionary<int, Vector2D> Directions = new();
 
     // individual directions
-    private readonly Vector2D UP = new Vector2D(0, -1);
-    private readonly Vector2D DOWN = new Vector2D(0, 1);
-    private readonly Vector2D LEFT = new Vector2D(-1, 0);
-    private readonly Vector2D RIGHT = new Vector2D(1, 0);
+    private readonly Vector2D UP = new(0, -1);
+    private readonly Vector2D DOWN = new(0, 1);
+    private readonly Vector2D LEFT = new(-1, 0);
+    private readonly Vector2D RIGHT = new(1, 0);
 
 
     /// <summary>
@@ -77,6 +74,7 @@ public class Server
         Directions.Add(1, DOWN);
         Directions.Add(2, LEFT);
         Directions.Add(3, RIGHT);
+        Powerup_Respawn_Delay = Powerup_Respawn_Timer;
 
     }
 
@@ -139,7 +137,7 @@ public class Server
 
         string playerName = state.GetData().Trim();
         // 1) Make a new Snake with the given name and unique ID (Recommended using the SocketState'sID). 
-        Snake snake = new((int)state.ID, playerName);
+        Snake snake = new((int)state.ID, playerName, Respawn_Rate, 0);
 
         //Display connection status
         Console.WriteLine("Client (" + state.ID + ") " + playerName + " Connected");
@@ -187,8 +185,6 @@ public class Server
             theWorld.Players[(int)state.ID].died = true;
             theWorld.Players[(int)state.ID].alive = false;
             theWorld.Players[(int)state.ID].dc = true;
-
-
         }
         lock (clients)
         {
@@ -314,8 +310,8 @@ public class Server
     /// </summary>
     public void StartFPSCounter()
     {
-        System.Diagnostics.Stopwatch fpsWatch = new System.Diagnostics.Stopwatch();
-        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch fpsWatch = new();
+        System.Diagnostics.Stopwatch watch = new();
 
         while (true)
         {
@@ -329,8 +325,6 @@ public class Server
                 { //empty here because we're timing the systems counter per Frame
                 }
                 //In place to make sure that a snake gets the desired amount of frames to grow when eating a powerup
-                if (Powerup_Eaten_Delay > 0)
-                    Powerup_Eaten_Delay--;
                 FPS++;
                 watch.Restart();
 
@@ -340,7 +334,7 @@ public class Server
 
                 CheckForCollisions(); // done 
 
-                WrapAround();
+                WrapAround(); // good enough
 
                 CheckForPlayerRespawns();// done
 
@@ -366,52 +360,61 @@ public class Server
         {
             foreach (Snake snake in theWorld.Players.Values)
             {
-                //Compute the velocity of the snake's head based on the player's updated movement commmand
-                Vector2D velocityVector = new();
+                // only alive snakes can move
+                if (snake.alive)
+                {
+                    //Compute the velocity of the snake's head based on the player's updated movement commmand
+                    Vector2D velocityVector = new();
 
-                // Add velocity to the head's position
-                if (snake.dir.Equals(UP))
-                {
-                    velocityVector = new Vector2D(0, -Snake_Speed);
-                    snake.body[snake.body.Count - 1] += velocityVector;
-                }
-                else if (snake.dir.Equals(DOWN))
-                {
-                    velocityVector = new Vector2D(0, Snake_Speed);
-                    snake.body[snake.body.Count - 1] += velocityVector;
-                }
-                else if (snake.dir.Equals(LEFT))
-                {
-                    velocityVector = new Vector2D(-Snake_Speed, 0);
-                    snake.body[snake.body.Count - 1] += velocityVector;
-                }
-                else if (snake.dir.Equals(RIGHT))
-                {
-                    velocityVector = new Vector2D(Snake_Speed, 0);
-                    snake.body[snake.body.Count - 1] += velocityVector;
-                }
-
-                //move the tail vertext by its velocity
-                //The tail's velocity is towards the next vertex in the body with a speed equal to the snake's speed
-
-                // if a snake has eaten a powerup, then the tail wont grow, making it longer.
-                if (Powerup_Eaten_Delay == 0)
-                {
-                    // if there is only two segments in the list, their velocites are the same, therefore no action necessary 
-                    if (snake.body.Count > 2)
+                    // Add velocity to the head's position
+                    if (snake.dir.Equals(UP))
                     {
-                        velocityVector = GetSnakesTailDirectionVector(snake);
-                        snake.body[0] += velocityVector;
+                        velocityVector = new Vector2D(0, -Snake_Speed);
+                        snake.body[snake.body.Count - 1] += velocityVector;
+                    }
+                    else if (snake.dir.Equals(DOWN))
+                    {
+                        velocityVector = new Vector2D(0, Snake_Speed);
+                        snake.body[snake.body.Count - 1] += velocityVector;
+                    }
+                    else if (snake.dir.Equals(LEFT))
+                    {
+                        velocityVector = new Vector2D(-Snake_Speed, 0);
+                        snake.body[snake.body.Count - 1] += velocityVector;
+                    }
+                    else if (snake.dir.Equals(RIGHT))
+                    {
+                        velocityVector = new Vector2D(Snake_Speed, 0);
+                        snake.body[snake.body.Count - 1] += velocityVector;
+                    }
 
-                        // if the snake tail and the segment before it have the same position then remove the tail 
-                        if (snake.body[0].Equals(snake.body[1]))
+                    //move the tail vertext by its velocity
+                    //The tail's velocity is towards the next vertex in the body with a speed equal to the snake's speed
+                    // if a snake has eaten a powerup, then the tail wont grow, making it longer.
+                    if (snake.GrowthRate == 0)
+                    {
+                        // if there is only two segments in the list, their velocites are the same, therefore no action necessary 
+                        if (snake.body.Count > 2)
                         {
-                            snake.body.RemoveAt(0);
+                            velocityVector = GetSnakesTailDirectionVector(snake);
+                            snake.body[0] += velocityVector;
+
+
+                            // if the snake tail and the segment before it have the same position then remove the tail 
+                            //if (snake.body[0].Equals(snake.body[1]))
+                            if (Vector2D.EqualsOtherVectorWithinRange(snake.body[0], snake.body[1], 3))
+                            {
+                                snake.body.RemoveAt(0);
+                            }
+                        }
+                        else
+                        {
+                            snake.body[0] += velocityVector;
                         }
                     }
                     else
                     {
-                        snake.body[0] += velocityVector;
+                        snake.GrowthRate--;
                     }
                 }
             }
@@ -424,7 +427,6 @@ public class Server
     /// <returns> Direction the Snake's Tail should travel</returns>
     private Vector2D GetSnakesTailDirectionVector(Snake s)
     {
-
         Vector2D secondToLastVector = new Vector2D(s.body[1]);
         Vector2D LastVector = new Vector2D(s.body[0]);
         float angle = Vector2D.AngleBetweenPoints(secondToLastVector, LastVector);
@@ -455,7 +457,7 @@ public class Server
             double xCord = 0;
             double yCord = 0;
 
-            if (snake.body.Last().GetX() > range || snake.body.Last().GetX() < -range || snake.body.Last().GetY() > range || snake.body.Last().GetY() < -range)
+            if (snake.body.First().GetX() > range || snake.body.First().GetX() < -range || snake.body.First().GetY() > range || snake.body.First().GetY() < -range)
             {
                 foreach (Vector2D segment in snake.body)
                 {
@@ -463,12 +465,12 @@ public class Server
                     if (snake.dir.GetX() != 0 && segment.GetX() > 0)
                     {
 
-                        xCord = (segment.GetX() * -1) + 2;
+                        xCord = (segment.GetX() * -1) + Snake_Starting_Length + 1;
 
                     }
                     else if (snake.dir.GetX() != 0 && segment.GetX() < 0)
                     {
-                        xCord = (segment.GetX() * -1) - 2;
+                        xCord = (segment.GetX() * -1) - Snake_Starting_Length - 1;
                     }
 
                     else
@@ -479,12 +481,12 @@ public class Server
                     if (snake.dir.GetY() != 0 && segment.GetY() > 0)
                     {
 
-                        yCord = (segment.GetY() * -1) + 2;
+                        yCord = (segment.GetY() * -1) + Snake_Starting_Length + 1;
 
                     }
                     else if (snake.dir.GetY() != 0 && segment.GetY() < 0)
                     {
-                        yCord = (segment.GetY() * -1) - 2;
+                        yCord = (segment.GetY() * -1) - Snake_Starting_Length - 1;
                     }
 
                     else
@@ -527,18 +529,29 @@ public class Server
             // snakes are the only objects that are capable of inducing a collision, therefore iterate through them
             foreach (Snake snake in theWorld.Players.Values)
             {
-                //Snake Collides with Wall  || Snake Collides with other player
-                if (CheckForWallCollision(snake.body.Last(), 0) || CheckForPlayerVsPlayerCollision(snake) || CheckForSelfCollision(snake))
+                if (snake.alive)
                 {
-                    snake.died = true;
-                    snake.alive = false;
-                }
+                    //Snake Collides with Wall  || Snake Collides with other player
+                    if (CheckForWallCollision(snake.body.Last(), 0) || CheckForPlayerVsPlayerCollision(snake) || CheckForSelfCollision(snake))
+                    {
+                        // snake death
+                        snake.died = true;
+                        snake.alive = false;
+                        snake.GrowthRate = 0;
+                    }
 
-                //Snake Collides With Powerup 
-                if (CheckForPowerupCollision(snake))
+                    //Snake Collides With Powerup 
+                    if (CheckForPowerupCollision(snake))
+                    {
+                        snake.score++;
+                        snake.GrowthRate += Snake_Growth_Rate;
+                        if (Powerup_Respawn_Delay <= 0) Powerup_Respawn_Delay = Powerup_Respawn_Timer;
+                    }
+                }
+                else
                 {
-                    snake.score++;
-                    // Powerup_Eaten_Delay = 24;
+                    snake.died = false;
+                    snake.RespawnRate--;
                 }
             }
         }
@@ -555,16 +568,19 @@ public class Server
         {
             foreach (Powerup power in theWorld.Powerups.Values)
             {
-                int powerupCollisionRadius = power.GetCollisionRadius();
-                Vector2D powerupLocation = power.loc;
-                int snakeHeadCollisionRadius = snake.GetCollisonRadius();
-                Vector2D snakeHeadLocation = snake.body.Last();
-                double distance = Vector2D.DistanceBetweenTwoVectors(powerupLocation, snakeHeadLocation);
-                int totalRadius = powerupCollisionRadius + snakeHeadCollisionRadius;
-                if (distance <= totalRadius)
+                if (snake.alive)
                 {
-                    power.died = true;
-                    return true;
+                    int powerupCollisionRadius = power.GetCollisionRadius();
+                    Vector2D powerupLocation = power.loc;
+                    int snakeHeadCollisionRadius = snake.GetCollisonRadius();
+                    Vector2D snakeHeadLocation = snake.body.Last();
+                    double distance = Vector2D.DistanceBetweenTwoVectors(powerupLocation, snakeHeadLocation);
+                    int totalRadius = powerupCollisionRadius + snakeHeadCollisionRadius;
+                    if (distance <= totalRadius)
+                    {
+                        power.died = true;
+                        return true;
+                    }
                 }
             }
             return false;
@@ -612,20 +628,16 @@ public class Server
     /// </summary>
     /// <param name="currentSnake"></param>
     /// <returns></returns>
-    private bool CheckForPlayerVsPlayerCollision(Snake snake) //heavent checked this and need to check if head collides with any point betweeen vectors of othersnake body
+    private bool CheckForPlayerVsPlayerCollision(Snake snake)
     {
         Snake currentSnake = snake;
-        double minX = 0;
-        double maxX = 0;
-        double minY = 0;
-        double maxY = 0;
-
         lock (theWorld)
         {
             // iterate through all current snakes
             foreach (Snake otherSnake in theWorld.Players.Values)
             {
-                if (!currentSnake.Equals(otherSnake))
+
+                if (!currentSnake.Equals(otherSnake) && (currentSnake.alive && otherSnake.alive))
                 {
                     // head on head collision
                     Vector2D currentHeadLocation = currentSnake.body.Last();
@@ -659,6 +671,8 @@ public class Server
                         double rightX = otherSnake.body[i - 1].GetX() + 5;
                         double rightY = otherSnake.body[i - 1].GetY() + 5;
 
+                        double minX;
+                        double maxX;
                         if (leftX < rightX)
                         {
                             minX = leftX;
@@ -670,6 +684,8 @@ public class Server
                             maxX = leftX;
                         }
 
+                        double minY;
+                        double maxY;
                         if (leftY < rightY)
                         {
                             minY = leftY;
@@ -700,23 +716,20 @@ public class Server
     /// <exception cref="NotImplementedException"></exception>
     private bool CheckForSelfCollision(Snake snake)
     {
-        double minX = 0;
-        double maxX = 0;
-        double minY = 0;
-        double maxY = 0;
         lock (theWorld)
         {
-
-            if (snake.body.Count > 3)
+            if (snake.body.Count > 3 && snake.alive)
             {
                 // head on body
-                for (int i = snake.body.Count - 2; i > 0; i--)
+                for (int i = snake.body.Count - 3; i > 0; i--)
                 {
                     double leftX = snake.body[i].GetX() - 5;
                     double leftY = snake.body[i].GetY() - 5;
                     double rightX = snake.body[i - 1].GetX() + 5;
                     double rightY = snake.body[i - 1].GetY() + 5;
 
+                    double minX;
+                    double maxX;
                     if (leftX < rightX)
                     {
                         minX = leftX;
@@ -728,6 +741,8 @@ public class Server
                         maxX = leftX;
                     }
 
+                    double minY;
+                    double maxY;
                     if (leftY < rightY)
                     {
                         minY = leftY;
@@ -739,14 +754,13 @@ public class Server
                         maxY = leftY;
                     }
 
-                    if (snake.body.Last().GetY() >= minY && snake.body.Last().GetY() <= maxY &&
-                        snake.body.Last().GetX() >= minX && snake.body.Last().GetX() <= maxX)
+                    if (snake.body.Last().GetY() > minY && snake.body.Last().GetY() < maxY &&
+                        snake.body.Last().GetX() > minX && snake.body.Last().GetX() < maxX)
                     {
                         return true;
                     }
                 }
             }
-
         }
         return false;
     }
@@ -764,11 +778,10 @@ public class Server
         {
             foreach (Snake snake in theWorld.Players.Values)
             {
-                if (snake.died)
+                if ((!snake.alive) && snake.RespawnRate == 0)
                 {
                     Vector2D headDirection = new();
-                    List<Vector2D> body = new List<Vector2D>();
-
+                    List<Vector2D> body = new();
                     bool isInvalidLocation = false;
                     do
                     {
@@ -802,8 +815,9 @@ public class Server
                         }
                         // while true indicating that when its not true, the loop breaks
                     } while (isInvalidLocation);
-
+                    // resets the current player
                     snake.dir = headDirection;
+                    snake.RespawnRate = Respawn_Rate;
                     snake.body = body;
                     snake.alive = true;
                     snake.died = false;
@@ -822,12 +836,22 @@ public class Server
         int ID = rand.Next();
         if (theWorld.Powerups.Count < Max_Powerups)
         {
-            for (int i = 0; i < Max_Powerups - theWorld.Powerups.Count; i++)
+            // only happens if powerup respawnt
+            if (Powerup_Respawn_Delay == 0)
             {
-                ID += 12;
-                Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);
-                theWorld.Powerups.Add(ID, powerup);
+                for (int i = 0; i < Max_Powerups - theWorld.Powerups.Count; i++)
+                {
+                    ID += 12;
+                    Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);
+                    theWorld.Powerups.Add(ID, powerup);
+                }
+
             }
+            else
+            {
+                Powerup_Respawn_Delay--;
+            }
+
         }
     }
 
@@ -849,7 +873,8 @@ public class Server
 
             // see if the desired location is valid with an addtional 100 pixel buffer that 
             // makes sure powerups dont spawn close to walls
-            isInvalidSpawn = CheckForWallCollision(location, 100);
+            isInvalidSpawn = CheckForWallCollision(location, 25);
+            // we dont check snake collisions
 
         } while (isInvalidSpawn);
 
@@ -891,8 +916,8 @@ public class Server
                 }
             }
 
-            //Check if there is any dead snakes or powerups to remove, then remove them. 
-            IEnumerable<int> IDsOfSnakesToRemove = theWorld.Players.Values.Where(x => x.died).Select(x => x.snake);
+            //removes disconected snakes and died powerups
+            IEnumerable<int> IDsOfSnakesToRemove = theWorld.Players.Values.Where(x => x.dc).Select(x => x.snake);
             foreach (int snakeID in IDsOfSnakesToRemove)
                 theWorld.Players.Remove(snakeID);
 
@@ -923,7 +948,6 @@ public class Server
         string msPerFrameTag = "//MSPerFrame";
         string universeSizeTag = "//UniverseSize";
         string powerupCapTag = "//PowerupCap";
-        string playerCapTag = "//PlayerCap";
         string snakeSpeedTag = "//SnakeSpeed";
         string snakeStartingLengthTag = "//SnakeStartingLength";
         string snakeGrowthRateTag = "//SnakeGrowthRate";
@@ -934,7 +958,6 @@ public class Server
         XmlNode msPerFrameNode = xmlDoc.SelectSingleNode(msPerFrameTag)!;
         XmlNode universeSizeNode = xmlDoc.SelectSingleNode(universeSizeTag)!;
         XmlNode powerupCapNode = xmlDoc.SelectSingleNode(powerupCapTag)!;
-        XmlNode playerCapNode = xmlDoc.SelectSingleNode(playerCapTag)!;
         XmlNode snakeSpeedNode = xmlDoc.SelectSingleNode(snakeSpeedTag)!;
         XmlNode snakeStartingLengthNode = xmlDoc.SelectSingleNode(snakeStartingLengthTag)!;
         XmlNode snakeGrowthRateNode = xmlDoc.SelectSingleNode(snakeGrowthRateTag)!;
@@ -961,11 +984,7 @@ public class Server
             Console.WriteLine($"Parsed PowerupCap: {powerupCap}");
             Max_Powerups = powerupCap;
         }
-        if (playerCapNode != null && int.TryParse(playerCapNode.InnerText, out int playerCap))
-        {
-            Console.WriteLine($"Parsed PlayerCap: {playerCap}");
-            Max_Players = playerCap;
-        }
+
         if (snakeSpeedNode != null && int.TryParse(snakeSpeedNode.InnerText, out int snakeSpeed))
         {
             Console.WriteLine($"Parsed Snake Speed: {snakeSpeed}");
@@ -984,7 +1003,7 @@ public class Server
         if (powerupRespawnDelayNode != null && int.TryParse(powerupRespawnDelayNode.InnerText, out int powerupRespawnDelay))
         {
             Console.WriteLine($"Parsed Powerup Respawn Delay: {powerupRespawnDelay}");
-            Powerup_Respawn_Delay = powerupRespawnDelay;
+            Powerup_Respawn_Timer = powerupRespawnDelay;
         }
 
 

@@ -13,13 +13,11 @@ namespace SnakeGame;
 /// </summary>
 public class Snake
 {
-    // in order for a snake to spawn, it can not be within 50 pixels of a collidable object.
-    private int RespawnRadius = 50;
 
     //An invisible barrier surrounding the snakes head, if anything comes in contact with this barrier
     // then a collision will be triggered. 
     // 10 bc snakes are drawn at a width of 10 
-    private int collisonRadius = 5;
+    private readonly int collisonRadius = 5;
 
     /// <summary>
     /// Getter/Setter method for snake ID.
@@ -66,7 +64,10 @@ public class Snake
     /// </summary>
     public bool join { get; set; }
 
-    private Vector2D previousDir;
+    public int RespawnRate { get; set; }
+
+    public int GrowthRate { get; set; }
+
 
     /// <summary>
     /// Parameterized Json constructor for Snake Class -- used for Json deserialization.
@@ -92,7 +93,6 @@ public class Snake
         this.alive = alive;
         this.dc = dc;
         this.join = join;
-        previousDir = new Vector2D(0, 0); 
     }
 
 
@@ -101,18 +101,23 @@ public class Snake
     /// </summary>
     /// <param name="snake"></param>
     /// <param name="name"></param>
-    public Snake(int snake, string name)
+    public Snake(int snake, string name, int RespawnRateTimer, int growthRate)
     {
         this.snake = snake;
         this.name = name;
-        body = new List<Vector2D> { new Vector2D(1, 0), new Vector2D(1, 120) }; // this is empty for now, this should be based on an empty location in the world. 
-        dir = new Vector2D(0,1);
+        body = new List<Vector2D>()
+        {
+            new Vector2D(0,1),
+            new Vector2D(0,121)
+        };
+        dir = new Vector2D(0, 1);
         score = 0;
         died = false;
         alive = true;
         dc = false;
-        join = true;  // should this be true? 
-        previousDir =  new Vector2D();
+        join = true;  
+        RespawnRate = RespawnRateTimer;
+        GrowthRate = growthRate;
     }
 
     /// <summary>
@@ -124,14 +129,6 @@ public class Snake
         return collisonRadius;
     }
 
-    /// <summary>
-    /// Getter for Respawn Radius
-    /// </summary>
-    /// <returns></returns>
-    public int GetRespawnRadius()
-    {
-        return RespawnRadius;
-    }
 
     /// <summary>
     /// Compares one snake to another based on their heads.

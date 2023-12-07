@@ -61,8 +61,62 @@ public class Vector2D
         {
             return false;
         }
-
         return ToString() == p.ToString();
+    }
+
+    /// <summary>
+    /// Decides if an object is close enough to be considered the same by a specified range.
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="range"></param>
+    /// <returns></returns>
+    public static bool EqualsOtherVectorWithinRange(Vector2D tail, Vector2D proceedingVector, int range)
+    {
+        if (tail.X == proceedingVector.X && tail.Y == proceedingVector.Y)
+            return true;
+
+
+        //tail: 0, 20
+        //proceeding: 0 ,21
+
+        double proceedingVectorWithRangeXPositive = proceedingVector.X + range;
+        double proceedingVectorWithRangeXNegative = proceedingVector.X - range;
+        double proceedingVectorWithRangeYPositive = proceedingVector.Y + range;
+        double proceedingVectorWithRangeYNegative = proceedingVector.Y - range;
+
+        double proceedingVectorMinX;
+        double proceedingVectorMinY;
+        double proceedingVectorMaxX;
+        double proceedingVectorMaxY;
+        
+        if(proceedingVectorWithRangeXPositive > proceedingVectorWithRangeXNegative)
+        {
+            proceedingVectorMinX = proceedingVectorWithRangeXNegative;
+            proceedingVectorMaxX = proceedingVectorWithRangeXPositive;
+        }
+        else
+        {
+            proceedingVectorMinX = proceedingVectorWithRangeXPositive;
+            proceedingVectorMaxX = proceedingVectorWithRangeXNegative;
+        }
+        if (proceedingVectorWithRangeYPositive > proceedingVectorWithRangeYNegative)
+        {
+            proceedingVectorMinY = proceedingVectorWithRangeYNegative;
+            proceedingVectorMaxY = proceedingVectorWithRangeYPositive;
+        }
+        else
+        {
+            proceedingVectorMinY = proceedingVectorWithRangeYPositive;
+            proceedingVectorMaxY = proceedingVectorWithRangeYNegative;
+        }
+
+        if(tail.X >= proceedingVectorMinX && tail.X <= proceedingVectorMaxX
+            && tail.Y >= proceedingVectorMinY && tail.Y <= proceedingVectorMaxY)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -120,7 +174,7 @@ public class Vector2D
     public static double DistanceBetweenTwoVectors(Vector2D v1, Vector2D v2)
     {
         //Distance formula
-        return Math.Sqrt(Math.Pow(v2.GetX() - v1.GetX(), 2) + Math.Pow(v2.GetY() - v1.GetY(),2));
+        return Math.Sqrt(Math.Pow(v2.GetX() - v1.GetX(), 2) + Math.Pow(v2.GetY() - v1.GetY(), 2));
     }
 
     /// <summary>
