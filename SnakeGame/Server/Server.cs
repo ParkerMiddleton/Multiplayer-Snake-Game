@@ -309,7 +309,6 @@ public class Server
                 {
 
                 }
-                FPS++;
                 watch.Restart();
 
                 UpdatePlayerAndPowerupCounts();
@@ -318,6 +317,8 @@ public class Server
                 CheckForWrapAround();
                 CheckForPlayerRespawns();
                 MakeSurePowerupsAreAtMaximum();
+                FPS++;
+
             }
             Console.WriteLine("FPS: " + FPS);
             fpsWatch.Restart();
@@ -579,6 +580,7 @@ public class Server
                 double oppWallStartY = wall.p1.GetY() + 25 + buffer;
                 double oppWallEndY = wall.p2.GetY() - 25 - buffer;
 
+
                 if ((obj.GetX() >= wallStartX && obj.GetX() <= wallEndX &&
                      obj.GetY() >= wallStartY && obj.GetY() <= wallEndY) ||
                     (obj.GetX() <= oppWallStartX && obj.GetX() >= oppWallEndX &&
@@ -601,6 +603,7 @@ public class Server
         Snake currentSnake = snake;
         lock (theWorld)
         {
+            // iterate through all current snakes
             foreach (Snake otherSnake in theWorld.Players.Values)
             {
                 if (!currentSnake.Equals(otherSnake) && (currentSnake.alive && otherSnake.alive))
@@ -612,7 +615,7 @@ public class Server
                     int otherCollisionRadius = currentSnake.GetCollisonRadius();
                     double distance = Vector2D.DistanceBetweenTwoVectors(currentHeadLocation, otherHeadLocation);
                     int totalRadius = currentCollisionRadius + otherCollisionRadius;
-
+                    // if snakes collide head on, it is decided at random who will die.
                     if (distance <= totalRadius)
                     {
                         Random dieDecider = new();
@@ -624,11 +627,48 @@ public class Server
                         {
                             otherSnake.died = true;
                             otherSnake.alive = false;
+                            return true;
                         }
                     }
-
                     // head on body
-                    return CheckForSnakeBodyCollision(currentSnake.body.Last());
+                    for (int i = otherSnake.body.Count - 1; i > 0; i--)
+                    {
+                        double leftX = otherSnake.body[i].GetX() - 5;
+                        double leftY = otherSnake.body[i].GetY() - 5;
+                        double rightX = otherSnake.body[i - 1].GetX() + 5;
+                        double rightY = otherSnake.body[i - 1].GetY() + 5;
+
+                        double minX;
+                        double maxX;
+                        if (leftX < rightX)
+                        {
+                            minX = leftX;
+                            maxX = rightX;
+                        }
+                        else
+                        {
+                            minX = rightX;
+                            maxX = leftX;
+                        }
+
+                        double minY;
+                        double maxY;
+                        if (leftY < rightY)
+                        {
+                            minY = leftY;
+                            maxY = rightY;
+                        }
+                        else
+                        {
+                            minY = rightY;
+                            maxY = leftY;
+                        }
+                        if (currentSnake.body.Last().GetY() >= minY && currentSnake.body.Last().GetY() <= maxY &&
+                            currentSnake.body.Last().GetX() >= minX && currentSnake.body.Last().GetX() <= maxX)
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
             return false;
@@ -636,11 +676,11 @@ public class Server
     }
 
     /// <summary>
-    /// Makes sure that powerups dont spawn on top of other objects.
+    /// Makes sure that powerups and snake vectors dont spawn on top of other snakes 
     /// </summary>
     /// <param name="vect">A given vector</param>
     /// <returns>Boolean</returns>
-    private bool CheckForSnakeBodyCollision(Vector2D vect)
+    private bool CheckForSnakeBodyCollisionOnSpawn(Vector2D vect)
     {
         // head on body
         lock (theWorld)
@@ -764,7 +804,45 @@ public class Server
                 {
                     Vector2D headDirection;
                     List<Vector2D> body;
-                    GetValidPlayerStartingData(out headDirection, out body);
+                    headDirection = new();
+                    body = new();
+                    bool isInvalidLocation = false;
+                    do
+                    {
+                        // randomize the direction 
+                        Random directionRandomizer = new Random();
+                        int directionPicker = directionRandomizer.Next(0, 3);
+                        headDirection = Directions.GetValueOrDefault(directionPicker)!;
+
+                        // randomize the spawn location x and y 
+                        Random locationRandomizer = new Random();
+
+                        // randomize the location but make sure that the snake never spawns off a ledge, subtract its starting length to prevent
+                        int Xcoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
+                        int Ycoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
+
+                        Vector2D headLocation = new Vector2D(Xcoord, Ycoord);
+
+                        // derive the tails location based on those 2 variables
+                        Vector2D tailLocation = headLocation - (headDirection * (double)Snake_Starting_Length);
+                        body = new List<Vector2D>() { tailLocation, headLocation };
+
+                        foreach (Vector2D segment in body)
+                        {
+                            if (CheckForSnakeBodyCollisionOnSpawn(segment))
+                            {
+                                isInvalidLocation = true;
+                            }
+                            else if (CheckForWallCollision(segment, Snake_Starting_Length))
+                            {
+                                isInvalidLocation = true;
+                            }
+                            else
+                            {
+                                isInvalidLocation = false;
+                            }
+                        }
+                    } while (isInvalidLocation);
 
                     // resets the current player
                     snake.dir = headDirection;
@@ -778,56 +856,15 @@ public class Server
         }
     }
 
-    private void GetValidPlayerStartingData(out Vector2D headDirection, out List<Vector2D> body)
-    {
-        headDirection = new();
-        body = new();
-        bool isInvalidLocation = false;
-        do
-        {
-            // randomize the direction 
-            Random directionRandomizer = new Random();
-            int directionPicker = directionRandomizer.Next(0, 3);
-            headDirection = Directions.GetValueOrDefault(directionPicker)!;
-
-            // randomize the spawn location x and y 
-            Random locationRandomizer = new Random();
-
-            // randomize the location but make sure that the snake never spawns off a ledge, subtract its starting length to prevent
-            int Xcoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
-            int Ycoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
-
-            Vector2D headLocation = new Vector2D(Xcoord, Ycoord);
-
-            // derive the tails location based on those 2 variables
-            Vector2D tailLocation = headLocation - (headDirection * (double)Snake_Starting_Length);
-            body = new List<Vector2D>() { tailLocation, headLocation };
-
-            //make sure head and tail arent overlapping a wall segment, pass the desired Snake_Starting_Length to make sure that
-            // there is never any objects in between the snake when spawning.
-            foreach (Vector2D segment in body)
-            {
-
-                if (CheckForWallCollision(segment, 0) || CheckForSnakeBodyCollision(segment))
-                {
-                    isInvalidLocation = true;
-                    break;
-                }
-            }
-            // while true indicating that when its not true, the loop breaks
-        } while (isInvalidLocation);
-    }
-
     /// <summary>
     /// Consistantly maintians a XML desired amount of powerups on the board.
     /// </summary>
     private void MakeSurePowerupsAreAtMaximum()
     {
-        Random rand = new Random(); // There has to be a better way to do this. This still has the chance to throw an exception
+        Random rand = new Random();
         int ID = rand.Next();
         if (theWorld.Powerups.Count < Max_Powerups)
         {
-            // only happens if powerup respawnt
             if (Powerup_Respawn_Delay == 0)
             {
                 for (int i = 0; i < Max_Powerups - theWorld.Powerups.Count; i++)
@@ -836,13 +873,11 @@ public class Server
                     Powerup powerup = new Powerup(ID, GeneratePowerupSpawnLocation(), false);
                     theWorld.Powerups.Add(ID, powerup);
                 }
-
             }
             else
             {
                 Powerup_Respawn_Delay--;
             }
-
         }
     }
 
@@ -864,7 +899,7 @@ public class Server
 
             // see if the desired location is valid with an addtional 100 pixel buffer that 
             // makes sure powerups dont spawn close to walls           
-            if (CheckForWallCollision(location, 25) || CheckForSnakeBodyCollision(location))
+            if (CheckForWallCollision(location, 25) || CheckForSnakeBodyCollisionOnSpawn(location))
             {
                 isInvalidSpawn = true;
             }
@@ -1029,7 +1064,6 @@ public class Server
     }
 
 }
-
 
 
 

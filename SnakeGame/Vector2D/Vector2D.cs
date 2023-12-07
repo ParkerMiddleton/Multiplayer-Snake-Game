@@ -88,8 +88,8 @@ public class Vector2D
         double proceedingVectorMinY;
         double proceedingVectorMaxX;
         double proceedingVectorMaxY;
-        
-        if(proceedingVectorWithRangeXPositive > proceedingVectorWithRangeXNegative)
+
+        if (proceedingVectorWithRangeXPositive > proceedingVectorWithRangeXNegative)
         {
             proceedingVectorMinX = proceedingVectorWithRangeXNegative;
             proceedingVectorMaxX = proceedingVectorWithRangeXPositive;
@@ -110,7 +110,7 @@ public class Vector2D
             proceedingVectorMaxY = proceedingVectorWithRangeYNegative;
         }
 
-        if(tail.X >= proceedingVectorMinX && tail.X <= proceedingVectorMaxX
+        if (tail.X >= proceedingVectorMinX && tail.X <= proceedingVectorMaxX
             && tail.Y >= proceedingVectorMinY && tail.Y <= proceedingVectorMaxY)
         {
             return true;
