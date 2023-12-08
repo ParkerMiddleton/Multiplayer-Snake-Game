@@ -1008,7 +1008,7 @@ public class Server
     /// </summary>
     private void ParseSettingsXMLFile()
     {
-        string relativePath = "settings.xml";
+        string relativePath = "../../../Settings/settings.xml";
 
         //First method of parsing XML is used here because the data that is parsed are just primitive types. 
         // Load the XML document from a file
