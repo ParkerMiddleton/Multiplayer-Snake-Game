@@ -1,12 +1,20 @@
-﻿# SnakeGame README
+﻿# SnakeClient README - PS8
 
 Author: Abbey Lasater, Parker Middleton -- byteBuddies_game
 Date: 11-24-2023
-PS8 -- Snake Game
+
+#########################################################################
+#                                                                       #
+#                                                                       #
+#                       CLIENT - SNAKE GAME                             #
+#                                                                       #
+#                                                                       #
+#########################################################################
+
 
 ## Overview
 
-This README provides essential information about the SnakeGame project, its features, usage, and important design decisions.
+This README provides essential information about the client project, its features, usage, and important design decisions.
 It also includes instructions on how to use the application.
 
 ## Table of Contents
@@ -24,7 +32,7 @@ random and unique color theme and users can customize their snakes name.
 
 ## General Usage and Help Resources
 
-General information about how to use the SnakeGame and some functions the SnakeGame has.
+General information about how to use the SnakeClient and some functions the SnakeClient has.
 
 The goal of the game is to navigate the snake to the powerups which, when eaten, increase the lenght of the snake. And to avoid
 the colored tiles which, when hit, kill the snake -- indicated by a red circle.

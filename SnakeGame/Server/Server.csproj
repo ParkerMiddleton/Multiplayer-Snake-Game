@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Libraries\" />
+    <Folder Include="NewFolder\" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="NetworkController">

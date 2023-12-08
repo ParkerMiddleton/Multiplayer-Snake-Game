@@ -126,10 +126,10 @@ public class Server
         string playerName = state.GetData().Trim();
 
         //Make a new Snake with the given name and unique ID (Recommended using the SocketState'sID). 
-        // Vector2D direction;
-        //List<Vector2D> body;
-        // GetValidPlayerStartingData(out direction, out body);
-        Snake snake = new((int)state.ID, playerName, Respawn_Rate, 0);//, body, direction);
+        Vector2D direction;
+        List<Vector2D> body;
+        GetValidPlayerSpawnOnConnection(out direction, out body);
+        Snake snake = new((int)state.ID, playerName, Respawn_Rate, 0, body, direction);//, body, direction);
 
         //Display connection status
         Console.WriteLine("Client (" + state.ID + ") " + playerName + " Connected");
@@ -503,7 +503,7 @@ public class Server
             {
                 if (snake.alive)
                 {
-                    if (CheckForWallCollision(snake.body.Last(), 0) || CheckForPlayerVsPlayerCollision(snake) || CheckForSelfCollision(snake))
+                    if (CheckForWallCollision(snake.body.Last(), 5) || CheckForPlayerVsPlayerCollision(snake) || CheckForSelfCollision(snake))
                     {
                         snake.died = true;
                         snake.alive = false;
@@ -627,9 +627,10 @@ public class Server
                         {
                             otherSnake.died = true;
                             otherSnake.alive = false;
-                            return true;
+                            return false;
                         }
                     }
+
                     // head on body
                     for (int i = otherSnake.body.Count - 1; i > 0; i--)
                     {
@@ -734,8 +735,7 @@ public class Server
     /// <summary>
     /// Determines if the snake has hit itself on a given frame
     /// </summary>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
+    /// <returns>Boolean</returns>
     private bool CheckForSelfCollision(Snake snake)
     {
         lock (theWorld)
@@ -854,10 +854,10 @@ public class Server
                 }
             }
         }
-    }
+    } 
 
     /// <summary>
-    /// Consistantly maintians a XML desired amount of powerups on the board.
+    /// Consistantly maintians an XML defined amount of powerups on the board.
     /// </summary>
     private void MakeSurePowerupsAreAtMaximum()
     {
@@ -885,7 +885,7 @@ public class Server
     /// Provides a Vector that doesnt collide with exisiting walls or snakes in the world. 
     /// X and Y values are randomly assigned but within the bounds of the world size. 
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Valid spawn location vector</returns>
     private Vector2D GeneratePowerupSpawnLocation()
     {
         Random rand = new();
@@ -958,6 +958,47 @@ public class Server
         }
     }
 
+    private void GetValidPlayerSpawnOnConnection(out Vector2D headDirection, out List<Vector2D> body)
+    {
+        bool isInvalidLocation = false;
+        do
+        {
+            // randomize the direction 
+            Random directionRandomizer = new Random();
+            int directionPicker = directionRandomizer.Next(0, 3);
+            headDirection = Directions.GetValueOrDefault(directionPicker)!;
+
+            // randomize the spawn location x and y 
+            Random locationRandomizer = new Random();
+
+            // randomize the location but make sure that the snake never spawns off a ledge, subtract its starting length to prevent
+            int Xcoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
+            int Ycoord = locationRandomizer.Next((-World_Size / 2) + Snake_Starting_Length, (World_Size / 2) - Snake_Starting_Length);
+
+            Vector2D headLocation = new Vector2D(Xcoord, Ycoord);
+
+            // derive the tails location based on those 2 variables
+            Vector2D tailLocation = headLocation - (headDirection * (double)Snake_Starting_Length);
+            body = new List<Vector2D>() { tailLocation, headLocation };
+
+            foreach (Vector2D segment in body)
+            {
+                if (CheckForSnakeBodyCollisionOnSpawn(segment))
+                {
+                    isInvalidLocation = true;
+                }
+                else if (CheckForWallCollision(segment, Snake_Starting_Length))
+                {
+                    isInvalidLocation = true;
+                }
+                else
+                {
+                    isInvalidLocation = false;
+                }
+            }
+        } while (isInvalidLocation);
+    }
+
     //////////////////////////////////////////////////////////////////////////
     /// XML ORIENTED METHODS
     //////////////////////////////////////////////////////////////////////////
@@ -994,46 +1035,47 @@ public class Server
         XmlNode snakeGrowthRateNode = xmlDoc.SelectSingleNode(snakeGrowthRateTag)!;
         XmlNode powerupRespawnDelayNode = xmlDoc.SelectSingleNode(powerupRespawnDelayTag)!;
 
-
+        Console.WriteLine("Server Settings: " + "\n"
+            +"================================================");
         if (respawnRateNode != null && int.TryParse(respawnRateNode.InnerText, out int respawnRate))
         {
-            Console.WriteLine($"Parsed CheckForPlayerRespawns Rate: {respawnRate}");
+            Console.WriteLine($"Respawn Rate: {respawnRate}");
             this.Respawn_Rate = respawnRate;
         }
         if (msPerFrameNode != null && int.TryParse(msPerFrameNode.InnerText, out int msPerFrame))
         {
-            Console.WriteLine($"Parsed MSPerFrame: {msPerFrame}");
+            Console.WriteLine($"Milliseconds Per Frame: {msPerFrame}");
             this.MS_Per_Frame = msPerFrame;
         }
         if (universeSizeNode != null && int.TryParse(universeSizeNode.InnerText, out int universeSize))
         {
-            Console.WriteLine($"Parsed UniverseSize: {universeSize}");
+            Console.WriteLine($"World Size: {universeSize}");
             World_Size = universeSize;
         }
         if (powerupCapNode != null && int.TryParse(powerupCapNode.InnerText, out int powerupCap))
         {
-            Console.WriteLine($"Parsed PowerupCap: {powerupCap}");
+            Console.WriteLine($"Powerup Cap: {powerupCap}");
             Max_Powerups = powerupCap;
         }
 
         if (snakeSpeedNode != null && int.TryParse(snakeSpeedNode.InnerText, out int snakeSpeed))
         {
-            Console.WriteLine($"Parsed Snake Speed: {snakeSpeed}");
+            Console.WriteLine($"Snake Speed: {snakeSpeed}");
             Snake_Speed = snakeSpeed;
         }
         if (snakeStartingLengthNode != null && int.TryParse(snakeStartingLengthNode.InnerText, out int snakeStartingLength))
         {
-            Console.WriteLine($"Parsed Snake Starting Length: {snakeStartingLength}");
+            Console.WriteLine($"Snake Starting Length: {snakeStartingLength}");
             Snake_Starting_Length = snakeStartingLength;
         }
         if (snakeGrowthRateNode != null && int.TryParse(snakeGrowthRateNode.InnerText, out int snakeGrowthRate))
         {
-            Console.WriteLine($"Parsed Snake Growth Rate: {snakeGrowthRate}");
+            Console.WriteLine($"Snake Growth Rate: {snakeGrowthRate}");
             Snake_Growth_Rate = snakeGrowthRate;
         }
         if (powerupRespawnDelayNode != null && int.TryParse(powerupRespawnDelayNode.InnerText, out int powerupRespawnDelay))
         {
-            Console.WriteLine($"Parsed Powerup Respawn Delay: {powerupRespawnDelay}");
+            Console.WriteLine($"Powerup Respawn Delay: {powerupRespawnDelay}");
             Powerup_Respawn_Timer = powerupRespawnDelay;
         }
 
@@ -1056,13 +1098,12 @@ public class Server
                         {
                             theWorld.Walls.Add(p.wall, p);
                         }
-
                     }
                     break;
             }
         }
+        Console.WriteLine("================================================\n");
     }
-
 }
 
 

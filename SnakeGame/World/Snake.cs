@@ -101,14 +101,12 @@ public class Snake
     /// </summary>
     /// <param name="snake"></param>
     /// <param name="name"></param>
-    public Snake(int snake, string name, int RespawnRateTimer, int growthRate)//, List<Vector2D> headAndTail, Vector2D direction)
+    public Snake(int snake, string name, int RespawnRateTimer, int growthRate, List<Vector2D> headAndTail, Vector2D direction)//, List<Vector2D> headAndTail, Vector2D direction)
     {
         this.snake = snake;
         this.name = name;
-        body = new List<Vector2D> { new Vector2D(0, 1), new Vector2D(0, 121) };
-        dir = new Vector2D(0, 1);
-        //body = headAndTail;
-        //dir = direction;
+        body = headAndTail;
+        dir = direction;
         score = 0;
         died = false;
         alive = true;
@@ -121,12 +119,11 @@ public class Snake
     /// <summary>
     /// Getter for Collison Radius
     /// </summary>
-    /// <returns></returns>
+    /// <returns>CollisionRadius</returns>
     public int GetCollisonRadius()
     {
         return collisonRadius;
     }
-
 
     /// <summary>
     /// Compares one snake to another based on their heads.
@@ -144,7 +141,6 @@ public class Snake
         return snake!.body.Last().Equals(this.body.Last());
 
     }
-
 
     /// <summary>
     /// Gives the hash code of the head of the snake, which should always never be the same. 
